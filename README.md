@@ -13,6 +13,9 @@ using it on GNU Guile 1.8.8 but it's very minimal (no external
 dependencies) so it will likely run on other Schemes after getting rid
 of the Guile `define-module` function at the top.
 
+Also, ggspec is now self-testing. Run the `test-ggspec.scm` file to see
+a demonstration.
+
 ## Installation
 
 ### Guile
@@ -148,6 +151,11 @@ the empty list:
       ... ;; setup-specs
       ... ;; test-specs
       end) ;; teardown-funcs
+
+Returns:
+
+A pair of: (_total number of tests run_ . _total number of failed
+tests_).
 
 ### assert-equal
 

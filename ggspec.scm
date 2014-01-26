@@ -5,22 +5,25 @@
 ;; GitHub, Reddit, Twitter: yawaramin
 (define-module (my ggspec)
   #:export
-    (assert-equal
+    (
+    assert-equal
+    assert-false
     assert-not-equal
     assert-true
     end
     run-suite
     run-test
-    setup))
+    setup
+    teardown
+    ))
 
 (define (ggspec-acons k v alist) (cons (cons k v) alist))
 (define setup ggspec-acons)
 (define run-test ggspec-acons)
+(define teardown cons)
 (define end '())
 
-(define (println . args)
-  (for-each display args)
-  (display #\newline))
+(define (println . args) (for-each display args) (display #\newline))
 
 (define (assert-equal expected got)
   (if (equal? expected got)
@@ -38,8 +41,8 @@
       #f)
     #t))
 
-(define (assert-true x)
-  (assert-equal #t x))
+(define (assert-true x) (assert-equal #t (if x #t #f)))
+(define (assert-false x) (assert-equal #f (if x #t #f)))
 
 (define (run-suite suite-desc setup-specs test-specs teardown-funcs)
   (println "  " suite-desc)
@@ -59,30 +62,12 @@
           (println "    " desc)
           (let ((result (test env)))
             (for-each (lambda (f) (f env)) (or teardown-funcs end))
+            (if (not result) (println "      => FAIL"))
             result))
         (or test-specs end)))
     (total (length results))
     (successes (length (filter identity results)))
     (failures (- total successes)))
-    (println "  " total " test(s), " failures " failure(s).")))
-
-;; The following is an example test suite to demonstrate the
-;; functionality; it is _not_ a test suite over the unit testing
-;; framework!
-(define (main)
-  (run-suite "Demonstration test suite"
-    ;; Setup specs.
-    (setup 'a (lambda () 1)
-    (setup 'b (lambda () 2)
-    end))
-  
-    ;; Test specs.
-    (run-test "1 should equal 2 minus 1."
-      (lambda (e) (assert-equal (e 'a) (- (e 'b) (e 'a))))
-    (run-test "1 should not equal 4."
-      (lambda (e) (assert-equal (e 'a) (+ (e 'b) (e 'b))))
-    end))
-  
-    ;; Teardown functions
-    end))
+    (println "  " total " test(s), " failures " failure(s).")
+    (cons total failures)))
 
