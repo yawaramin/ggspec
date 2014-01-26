@@ -54,15 +54,17 @@
           (define (env name) (assoc-ref bindings name))
           (define desc (car test-spec))
           (define test (cdr test-spec))
+          ;; Have to print the test description first because the test
+          ;; functions might write their own output to screen.
           (println "    " desc)
-          (test env))
+          (let ((result (test env)))
+            (for-each (lambda (f) (f env)) (or teardown-funcs end))
+            result))
         (or test-specs end)))
     (total (length results))
     (successes (length (filter identity results)))
     (failures (- total successes)))
-
-    (println "  " total " test(s), " failures " failure(s)."))
-  (for-each (lambda (f) (f env)) (or teardown-funcs end)))
+    (println "  " total " test(s), " failures " failure(s).")))
 
 ;; The following is an example test suite to demonstrate the
 ;; functionality; it is _not_ a test suite over the unit testing
