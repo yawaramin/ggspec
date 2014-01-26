@@ -209,6 +209,21 @@ As explained above, these are aliases for the `acons` Scheme function to
 provide a little 'syntactic sugar' for building up lists of setup and
 test specs.
 
+### teardown
+
+This is also an alias: for the `cons` function. You can use it to
+organise a set of functions to be run as teardown functions after each
+(and every) test:
+
+    (run-suite "Demo"
+      ...
+      ...
+      (teardown
+        (lambda (e) ...)
+      (teardown
+        (lambda (e) ...)
+      end)))
+
 ### end
 
 This is just the empty list; again, to help provide a more
