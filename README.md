@@ -66,27 +66,27 @@ Defines and runs a test suite.
 
 Arguments:
 
-  - `suite-desc` - string: a description of the test suite
+`suite-desc` - string: a description of the test suite
   
-  - `setup-specs` - alist of symbols to functions which don't take any
-  arguments, and return one value
+`setup-specs` - alist of symbols to functions which don't take any
+arguments, and return one value
 
-  This association list is used to set up an 'environment' of names and
-  their associated values. If you're familiar with the xUnit style, this
-  is analogous to the `setUp()` function in each test suite class that
-  sets up frequently-used values which can then be accessed by each
-  test case. Accessing the values in ggspec is explained later.
+This association list is used to set up an 'environment' of names and
+their associated values. If you're familiar with the xUnit style, this
+is analogous to the `setUp()` function in each test suite class that
+sets up frequently-used values which can then be accessed by each test
+case. Accessing the values in ggspec is explained later.
 
-  Building the `setup-specs` alist is simplified with a little
-  definition trickery. The `setup` and `end` names are aliased to the
-  `acons` function so that:
+Building the `setup-specs` alist is simplified with a little definition
+trickery. The `setup` and `end` names are aliased to the `acons`
+function so that:
 
     (setup 'x (lambda () 1)
     (setup 'y (lambda () 2)
     (setup 'z (lambda () 3)
     end)))
 
-  ... becomes:
+... becomes:
 
     (acons
       'x
@@ -99,29 +99,29 @@ Arguments:
           (lambda () 3)
           '())))
 
-  (Note: I'm using the function name `acons`, which may not be available
-  in all Schemes; but it's the same thing as SRFI-1's `alist-cons`.)
+(Note: I'm using the function name `acons`, which may not be available
+in all Schemes; but it's the same thing as SRFI-1's `alist-cons`.)
 
-  - `test-specs` - alist of strings to functions which take a single
+`test-specs` - alist of strings to functions which take a single
   argument and return either `#t` (success) or `#f` (failure)
 
-  This alist is used to run the actual tests. Each test spec is a pair
-  made up of a string describing the test and a function which carries
-  out the test.
+This alist is used to run the actual tests. Each test spec is a pair
+made up of a string describing the test and a function which carries out
+the test.
 
-  The function takes a single argument `e`--the 'environment' which was
-  previously defined by `setup-specs`--and returns a boolean to indicate
-  test pass or fail. (You must define the function with the `e`
-  parameter whether you defined any setup specs earlier or not). If
-  you defined any setup specs earlier, you can access their values by
-  calling `e` with the name given to the set up variable:
+The function takes a single argument `e`--the 'environment' which was
+previously defined by `setup-specs`--and returns a boolean to indicate
+test pass or fail. (You must define the function with the `e` parameter
+whether you defined any setup specs earlier or not). If you defined
+any setup specs earlier, you can access their values by calling `e` with
+the name given to the set up variable:
 
     (e 'x) => 1
     (e 'y) => 2
     (e 'z) => 3
 
-  Again, building the test specs alist is simplified with some similar
-  definition trickery. The `run-test` name is aliased so that:
+Again, building the test specs alist is simplified with some similar
+definition trickery. The `run-test` name is aliased so that:
 
     (run-test "x plus y should equal z"
       (lambda (e)
@@ -134,15 +134,15 @@ Arguments:
         (assert-equal (e 'x) (quotient (e 'z) (e 'y))))
     end)))
 
-  ... expands out to the proper alist, as explained above.
+... expands out to the proper alist, as explained above.
 
-  - `teardown-funcs` - list (not alist) of functions which take a single
-  value and don't (intentionally) return anything
+`teardown-funcs` - list (not alist) of functions which take a single
+value and don't (intentionally) return anything
 
-  The teardown functions are each called with the 'environment' (`e`)
-  that was initially defined in the suite. If you don't have any
-  teardown to do you can pass in an empty list, or the `end` name which
-  has been bound to the empty list:
+The teardown functions are each called with the 'environment' (`e`) that
+was initially defined in the suite. If you don't have any teardown to do
+you can pass in an empty list, or the `end` name which has been bound to
+the empty list:
 
     (run-suite "Demo"
       ... ;; setup-specs
@@ -155,15 +155,15 @@ Checks whether the expected and actual values are equal.
 
 Arguments:
 
-  - `expected` - any: the expected value
+`expected` - any: the expected value
 
-  - `got` - any: the actual value
+`got` - any: the actual value
 
-  If the two differ, immediately prints the actual and expected values.
+If the two differ, immediately prints the actual and expected values.
 
 Returns:
 
-  `#t` if the expected and received values are the same; `#f` otherwise.
+`#t` if the expected and received values are the same; `#f` otherwise.
 
 ### assert-not-equal
 
@@ -171,15 +171,15 @@ Like `assert-equal`, but checks that the opposite is true.
 
 Arguments:
 
-  - `not-expected` - any
+`not-expected` - any
 
-  - `got` - any
+`got` - any
 
-  If the two are the same, immediately prints the values.
+If the two are the same, immediately prints the values.
 
 Returns:
 
-  `#t` if the expected and receive values differ; `#f` otherwise.
+`#t` if the expected and receive values differ; `#f` otherwise.
 
 ### assert-true
 
@@ -187,13 +187,13 @@ Checks whether something is true.
 
 Arguments:
 
-  - `x` - any
+- `x` - any
 
-  If `x` evaluates to `#f`, immediately prints it.
+If `x` evaluates to `#f`, immediately prints it.
 
 Returns:
 
-  The truth value of `x`.
+The truth value of `x`.
 
 ### run-test, setup
 
