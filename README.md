@@ -3,7 +3,9 @@
 (and other Schemes?)
 
 Copyright 2014 Yawar Amin
+
 See LICENSE file for details
+
 GitHub, Reddit, Twitter: yawaramin
 
 ggspec is a _very_ lightweight unit testing framework for Scheme(s). I am
@@ -28,11 +30,11 @@ using your Scheme's file loading function.
 
 ## Minimal complete example
 
-  guile> (use-modules (my ggspec))
-  guile> (run-suite "Hello ggspec" end end end)
-    Hello ggspec
-    0 test(s), 0 failure(s).
-  guile>
+    guile> (use-modules (my ggspec))
+    guile> (run-suite "Hello ggspec" end end end)
+      Hello ggspec
+      0 test(s), 0 failure(s).
+    guile>
 
 ## Motivation
 
@@ -79,23 +81,23 @@ Arguments:
   definition trickery. The `setup` and `end` names are aliased to the
   `acons` function so that:
 
-  (setup 'x (lambda () 1)
-  (setup 'y (lambda () 2)
-  (setup 'z (lambda () 3)
-  end)))
+    (setup 'x (lambda () 1)
+    (setup 'y (lambda () 2)
+    (setup 'z (lambda () 3)
+    end)))
 
   ... becomes:
 
-  (acons
-    'x
-    (lambda () 1)
     (acons
-      'y
-      (lambda () 2)
+      'x
+      (lambda () 1)
       (acons
-        'z
-        (lambda () 3)
-        '())))
+        'y
+        (lambda () 2)
+        (acons
+          'z
+          (lambda () 3)
+          '())))
 
   (Note: I'm using the function name `acons`, which may not be available
   in all Schemes; but it's the same thing as SRFI-1's `alist-cons`.)
@@ -114,23 +116,23 @@ Arguments:
   you defined any setup specs earlier, you can access their values by
   calling `e` with the name given to the set up variable:
 
-  (e 'x) => 1
-  (e 'y) => 2
-  (e 'z) => 3
+    (e 'x) => 1
+    (e 'y) => 2
+    (e 'z) => 3
 
   Again, building the test specs alist is simplified with some similar
   definition trickery. The `run-test` name is aliased so that:
 
-  (run-test "x plus y should equal z"
-    (lambda (e)
-      (assert-equal (e 'z) (+ (e 'x) (e 'y))))
-  (run-test "x minus y should not equal z"
-    (lambda (e)
-      (assert-not-equal (e 'z) (- (e 'x) (e 'y))))
-  (run-test "z divided by y should have quotient x"
-    (lambda (e)
-      (assert-equal (e 'x) (quotient (e 'z) (e 'y))))
-  end)))
+    (run-test "x plus y should equal z"
+      (lambda (e)
+        (assert-equal (e 'z) (+ (e 'x) (e 'y))))
+    (run-test "x minus y should not equal z"
+      (lambda (e)
+        (assert-not-equal (e 'z) (- (e 'x) (e 'y))))
+    (run-test "z divided by y should have quotient x"
+      (lambda (e)
+        (assert-equal (e 'x) (quotient (e 'z) (e 'y))))
+    end)))
 
   ... expands out to the proper alist, as explained above.
 
@@ -142,10 +144,10 @@ Arguments:
   teardown to do you can pass in an empty list, or the `end` name which
   has been bound to the empty list:
 
-  (run-suite "Demo"
-    ... ;; setup-specs
-    ... ;; test-specs
-    end) ;; teardown-funcs
+    (run-suite "Demo"
+      ... ;; setup-specs
+      ... ;; test-specs
+      end) ;; teardown-funcs
 
 ### assert-equal
 
