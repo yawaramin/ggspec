@@ -14,12 +14,14 @@
     run-suite
     run-test
     setup
+    stub
     teardown
     ))
 
 (define (ggspec-acons k v alist) (cons (cons k v) alist))
 (define setup ggspec-acons)
 (define run-test ggspec-acons)
+(define (stub retval) (lambda args retval))
 (define teardown cons)
 (define end '())
 

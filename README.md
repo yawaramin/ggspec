@@ -224,6 +224,27 @@ organise a set of functions to be run as teardown functions after each
         (lambda (e) ...)
       end)))
 
+### stub
+
+Creates a 'stub' for any function.
+
+The stub is a function that can take any combination of function
+arguments and will return a predefined value.
+
+Arguments:
+
+`retval` - any: the predefined value that the stub should return
+
+Returns:
+
+A function that takes any combination of arguments and always returns
+`retval`.
+
+Stubbing is useful when you want to test functions in isolation from
+each others' effects. It lets you 'hold all other things equal' (by
+giving all those other function calls predefined return values) while
+you test one thing (the current test).
+
 ### end
 
 This is just the empty list; again, to help provide a more

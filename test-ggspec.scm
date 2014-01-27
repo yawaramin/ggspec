@@ -49,3 +49,20 @@
 
   end)
 
+(run-suite "Stubbing an arbitrary function with a given value"
+  (setup 'retval (lambda () 1)
+  (setup 'f (lambda () (stub 1))
+  end))
+
+  (run-test "And calling it with arbitrary arguments should return the
+    given value"
+    (lambda (e)
+      (and
+        (assert-equal (e 'retval) ((e 'f)))
+        (assert-equal (e 'retval) ((e 'f) 1))
+        (assert-equal (e 'retval) ((e 'f) 1 2))
+        (assert-equal (e 'retval) ((e 'f) 1 2 3 "a" "b" "c" '()))))
+  end)
+
+  end)
+
