@@ -1,68 +1,51 @@
 (use-modules (my ggspec))
 
-(run-suite "run-suite"
-  (setup 'one (lambda () 1)
-  (setup 'two (lambda () 2)
-  (setup 'stra (lambda () "a")
-  (setup 'strb (lambda () "b")
-  (setup 'chara (lambda () #\a)
-  (setup 'charb (lambda () #\b)
-  end))))))
+(define (test-assertions)
+  (suite "ggspec assertion functions"
+    (options)
+    (setups)
+    (tests
+      (test "Should assert equality"
+        (options)
+        (lambda (e)
+          (and
+            ((e 'assert-equal) 1 1)
+            ((e 'assert-equal) #\a #\a)
+            ((e 'assert-equal) "a" "a")))))
+    (teardowns)))
 
-  (run-test "Should assert equality correctly"
-    (lambda (e)
-      (and
-        (assert-equal (e 'one) (e 'one))
-        (assert-equal (e 'stra) (e 'stra))
-        (assert-equal (e 'chara) (e 'chara))
-        (assert-equal '((e 'one)) '((e 'one)))))
-  (run-test "Should assert inequality correctly"
-    (lambda (e)
-      (and
-        (assert-not-equal (e 'one) (e 'two))
-        (assert-not-equal (e 'stra) (e 'strb))
-        (assert-not-equal (e 'chara) (e 'charb))
-        (assert-not-equal '((e 'one)) '((e 'two)))))
-  (run-test "Should assert truthiness correctly"
-    (lambda (e)
-      (and
-        (assert-true (= (e 'one) (e 'one)))
-        (assert-true (string=? (e 'stra) (e 'stra)))
-        (assert-true 0)
-        (assert-true '())
-        (not (assert-true (= (e 'one) (e 'two))))
-        (not (assert-true (string=? (e 'stra) (e 'strb))))
-        (not (assert-true #f))))
-  (run-test "Should assert falsiness correctly"
-    (lambda (e)
-      (and
-        (assert-false #f)
-        (assert-false (= (e 'one) (e 'two)))
-        (assert-false (string=? (e 'stra) (e 'strb)))
-        (not (assert-false (= (e 'one) (e 'one))))
-        (not (assert-false (string=? (e 'stra) (e 'stra))))
-        (not (assert-false 0))
-        (not (assert-false '()))))
-  (run-test "Should have set up 'environment' of one == 1"
-    (lambda (e) (assert-equal 1 (e 'one)))
-  end)))))
-
-  end)
-
-(run-suite "Stubbing an arbitrary function with a given value"
-  (setup 'retval (lambda () 1)
-  (setup 'f (lambda () (stub 1))
-  end))
-
-  (run-test "And calling it with arbitrary arguments should return the
-    given value"
-    (lambda (e)
-      (and
-        (assert-equal (e 'retval) ((e 'f)))
-        (assert-equal (e 'retval) ((e 'f) 1))
-        (assert-equal (e 'retval) ((e 'f) 1 2))
-        (assert-equal (e 'retval) ((e 'f) 1 2 3 "a" "b" "c" '()))))
-  end)
-
-  end)
+(define (test-suite)
+  (suite "A ggspec example suite"
+    (options
+      (option 'output-cb text-verbose))
+    (setups
+      (setup 's
+        (lambda ()
+          (suite "A test-internal suite"
+            (options
+              (option 'output-cb none))
+            (setups)
+            (tests
+              (test "A passing test" (options) (lambda (e) #t))
+              (test "A failing test" (options) (lambda (e) #f)))))))
+    (tests
+      (test "Should have one pass and one fail"
+        (options)
+        (lambda (e)
+          (and
+            ((e 'assert-equal) 1 (length (suite-passes (e 's))))
+            ((e 'assert-equal) 1 (length (suite-fails (e 's)))))))
+      (test "Should name the passing test"
+        (options)
+        (lambda (e)
+          ((e 'assert-equal)
+            "A passing test"
+            (car (suite-passes (e 's))))))
+      (test "Should name the failing test"
+        (options)
+        (lambda (e)
+          ((e 'assert-equal)
+            "A failing test"
+            (car (suite-fails (e 's)))))))
+    (teardowns)))
 

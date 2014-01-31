@@ -4,6 +4,7 @@
 ;; See LICENSE file for details
 ;; GitHub, Reddit, Twitter: yawaramin
 (define-module (my ggspec)
+  #:use-module (ice-9 optargs)
   #:export
     (
     assert-equal
@@ -15,36 +16,71 @@
     run-test
     setup
     stub
+    stubf
     teardown
     ))
 
 (define (ggspec-acons k v alist) (cons (cons k v) alist))
 (define setup ggspec-acons)
 (define run-test ggspec-acons)
-(define (stub retval) (lambda args retval))
+
+(define (stub retval)
+  "Stubs a function to return a canned value.
+
+  Arguments:
+  `retval` - any: the canned value to return.
+
+  Returns:
+  A function that takes any combination of arguments and returns the
+  canned value."
+  (lambda args retval))
+
+;; A frequently-used stub.
+(define stubf (stub #f))
 (define teardown cons)
 (define end '())
 
 (define (println . args) (for-each display args) (display #\newline))
 
-(define (assert-equal expected got)
+(define (assert-equal-to output-cb expected got)
+  "Checks that the expected value is equal to the received value. If
+  not, sends failure messages to the output callback function.
+
+  Arguments:
+  `output-cb` - proc that accepts any number of arguments: the output
+  callback function to send messages to.
+
+  `expected` - any: the expected value.
+
+  `got` - any: the received value.
+
+  Returns:
+  `#t` if the expected and received values are equal. `#f` otherwise."
   (if (equal? expected got)
-    #t
     (begin
-      (println "      Expected: " expected)
-      (println "           Got: " got)
+      (output-cb #:status 'pass)
+      #t)
+    (begin
+      (output-cb #:expected expected #:got got #:status 'fail)
       #f)))
 
-(define (assert-not-equal not-expected got)
+(define (assert-not-equal-to output-cb not-expected got)
+  "Like `assert-equal-to`, but checks that the specified value is not
+  equal to the received value. If they are equal, sends failure messages
+  to the output callback function."
   (if (equal? not-expected got)
     (begin
-      (println "      Expected: not " not-expected)
-      (println "           Got: " got)
+      (output-cb #:not-expected not-expected #:got got #:status 'fail)
       #f)
-    #t))
+    (begin
+      (output-cb #:status 'pass)
+      #t)))
 
-(define (assert-true x) (assert-equal #t (if x #t #f)))
-(define (assert-false x) (assert-equal #f (if x #t #f)))
+(define (assert-true-to output-cb x)
+  (assert-equal-to output-cb #t (if x #t #f)))
+
+(define (assert-false-to output-cb x)
+  (assert-equal-to output-cb #f (if x #t #f)))
 
 (define (run-suite suite-desc setup-specs test-specs teardown-funcs)
   (println "  " suite-desc)
