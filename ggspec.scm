@@ -4,31 +4,30 @@
 ;; See LICENSE file for details
 ;; GitHub, Reddit, Twitter: yawaramin
 (define-module (my ggspec)
-  #:use-module (ice-9 optargs)
+  #:use-module (srfi srfi-1)
+  #:use-module (ice-9 receive)
   #:export
     (
-    assert-equal
-    assert-false
-    assert-not-equal
-    assert-true
-    end
-    run-suite
-    run-test
+    suite
+    options
+    option
+    setups
     setup
-    stub
-    stubf
-    teardown
+    tests
+    test
+    teardowns
+    text-verbose
+    text-normal
+    none
+    suite-passes
+    suite-fails
     ))
-
-(define (ggspec-acons k v alist) (cons (cons k v) alist))
-(define setup ggspec-acons)
-(define run-test ggspec-acons)
 
 (define (stub retval)
   "Stubs a function to return a canned value.
 
   Arguments:
-  `retval` - any: the canned value to return.
+  retval - any: the canned value to return.
 
   Returns:
   A function that takes any combination of arguments and returns the
@@ -40,40 +39,43 @@
 (define teardown cons)
 (define end '())
 
-(define (println . args) (for-each display args) (display #\newline))
+(define (println . args) (for-each display args) (newline))
 
 (define (assert-equal-to output-cb expected got)
   "Checks that the expected value is equal to the received value. If
   not, sends failure messages to the output callback function.
 
-  Arguments:
-  `output-cb` - proc that accepts any number of arguments: the output
+  Arguments
+  output-cb - proc that accepts any number of arguments: the output
   callback function to send messages to.
 
-  `expected` - any: the expected value.
+  expected - any: the expected value.
 
-  `got` - any: the received value.
+  got - any: the received value.
 
   Returns:
-  `#t` if the expected and received values are equal. `#f` otherwise."
+  #t if the expected and received values are equal. #f otherwise."
   (if (equal? expected got)
     (begin
-      (output-cb #:status 'pass)
+      (output-cb #:assert-status 'pass)
       #t)
     (begin
-      (output-cb #:expected expected #:got got #:status 'fail)
+      (output-cb #:expected expected #:got got #:assert-status 'fail)
       #f)))
 
 (define (assert-not-equal-to output-cb not-expected got)
-  "Like `assert-equal-to`, but checks that the specified value is not
+  "Like assert-equal-to, but checks that the specified value is not
   equal to the received value. If they are equal, sends failure messages
   to the output callback function."
   (if (equal? not-expected got)
     (begin
-      (output-cb #:not-expected not-expected #:got got #:status 'fail)
+      (output-cb
+        #:not-expected not-expected
+        #:got got
+        #:assert-status 'fail)
       #f)
     (begin
-      (output-cb #:status 'pass)
+      (output-cb #:assert-status 'pass)
       #t)))
 
 (define (assert-true-to output-cb x)
@@ -82,30 +84,159 @@
 (define (assert-false-to output-cb x)
   (assert-equal-to output-cb #f (if x #t #f)))
 
-(define (run-suite suite-desc setup-specs test-specs teardown-funcs)
-  (println "  " suite-desc)
+(define (suite desc opts sups tsts tdowns)
+  "Declares a test suite.
+
+  Arguments
+    desc: string: description of the suite.
+
+    opts: (list opt ...): a collection of options to pass into the
+    suite.
+
+      opt:
+        (list
+          (cons opt-name opt-val) ...)
+
+        opt-name: symbol: the name of the option.
+        opt-val: any: the value being given to the option.
+
+    sups: (list sup ...): a collection of setup names and values to pass
+    into each test.
+
+      sup: (cons sup-name sup-val)
+
+        sup-name: symbol
+        sup-val: (lambda () expr)
+
+          expr: any: the value to be given to the setup variable during
+          each test run. Will be re-evaluated each time a test is run.
+
+    tsts: (list tst ...): a collection of tests to run in this suite.
+
+      tst: (list desc opts (lambda (e) expr))
+
+        desc: string: description of the test.
+        opts: same as above.
+        expr: the body of the test.
+
+  Returns
+    (list desc pass-list fail-list)
+
+      pass-list: (list desc ...)
+      fail-list: (list desc ...)
+
+        desc: string: a description."
+  (define output-cb
+    (let ((v (assoc-ref opts 'output-cb))) (if v v text-normal)))
+  (output-cb #:suite-desc desc)
+
   (let*
-    ((results
+    ((suite-bindings
+      (list
+        (cons
+          'assert-equal
+          (lambda (expected got)
+            (assert-equal-to output-cb expected got)))
+        (cons
+          'assert-not-equal
+          (lambda (expected got)
+            (assert-not-equal-to output-cb expected got)))
+        (cons
+          'assert-true
+          (lambda (x) (assert-true-to output-cb x)))
+        (cons
+          'assert-false
+          (lambda (x) (assert-false-to output-cb x)))))
+
+    ;; Intermediate result structure:
+    ;;
+    ;; (list
+    ;;   (cons 'pass desc) ...
+    ;;   (cons 'fail desc) ...)
+    (intermediate-results
       (map
-        (lambda (test-spec)
-          (define bindings
-            (map
-              (lambda (pair) (cons (car pair) ((cdr pair))))
-              (or setup-specs end)))
-          (define (env name) (assoc-ref bindings name))
-          (define desc (car test-spec))
-          (define test (cdr test-spec))
-          ;; Have to print the test description first because the test
-          ;; functions might write their own output to screen.
-          (println "    " desc)
-          (let ((result (test env)))
-            (for-each (lambda (f) (f env)) (or teardown-funcs end))
-            (if (not result) (println "      => FAIL"))
-            result))
-        (or test-specs end)))
-    (total (length results))
-    (successes (length (filter identity results)))
-    (failures (- total successes)))
-    (println "  " total " test(s), " failures " failure(s).")
-    (cons total failures)))
+        (lambda (tst)
+          (define test-desc (car tst))
+          (define test-bindings
+            (append
+              suite-bindings
+              (map
+                (lambda (sup) (cons (car sup) ((cdr sup))))
+                (or sups end))))
+          (define (env name) (assoc-ref test-bindings name))
+          (output-cb #:test-desc test-desc)
+          (let
+            ((result ((caddr tst) env)))
+            (cons
+              (if result
+                (begin
+                  (output-cb #:test-status 'pass)
+                  'pass)
+                (begin
+                  (output-cb #:test-status 'fail)
+                  'fail))
+              test-desc)))
+        (or tsts end))))
+
+    (receive (passes fails)
+      (partition
+        (lambda (result) (equal? 'pass (car result)))
+        intermediate-results)
+      (list desc (map cdr passes) (map cdr fails)))))
+
+(define options list)
+(define option cons)
+(define setups list)
+(define setup cons)
+(define tests list)
+(define test list)
+(define teardowns list)
+(define text-verbose stubf)
+
+(define (kwalist arglist)
+  "Turn a list of keyword arguments into an alist of symbols and
+  values.
+
+  Arguments
+    arglist: (list #:kw1 arg1 ...)
+
+  Returns
+    (list (cons sym1 arg1) ...)"
+  (cond
+    ((null? arglist) end)
+    ((= 1 (length arglist)) (error "Keyword argument error"))
+    (#t
+      (cons
+        (cons
+          (keyword->symbol (car arglist))
+          (cadr arglist))
+        (kwalist (cddr arglist))))))
+
+(define (text-verbose . kwargs)
+  (define kws (kwalist kwargs))
+  (define (when-then-print sym msg)
+    (if (assoc sym kws)
+      (println msg (assoc-ref kws sym))))
+
+  (when-then-print 'suite-desc "  Suite: ")
+  (when-then-print 'test-desc "    Test: ")
+  (when-then-print 'expected "      Expected: ")
+  (when-then-print 'not-expected "      Not expected: ")
+  (when-then-print 'got "      Got: ")
+  (when-then-print 'assert-status "      Assert ")
+  (when-then-print 'test-status "    Test "))
+
+(define (text-normal . kwargs)
+  (define kws (kwalist kwargs))
+  (define (when-then-print sym msg)
+    (if (assoc sym kws)
+      (println msg (assoc-ref kws sym))))
+
+  (when-then-print 'suite-desc "  Suite: ")
+  (when-then-print 'test-status "    Test "))
+
+(define none stubf)
+
+(define (suite-passes s) (cadr s))
+(define (suite-fails s) (caddr s))
 

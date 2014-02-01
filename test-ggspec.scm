@@ -1,3 +1,8 @@
+;; ggspec - lightweight unit testing library for GNU Guile (and other
+;; Schemes?)
+;; Copyright (c) 2014 Yawar Amin
+;; See LICENSE file for details
+;; GitHub, Reddit, Twitter: yawaramin
 (use-modules (my ggspec))
 
 (define (test-assertions)
@@ -16,8 +21,7 @@
 
 (define (test-suite)
   (suite "A ggspec example suite"
-    (options
-      (option 'output-cb text-verbose))
+    (options)
     (setups
       (setup 's
         (lambda ()
@@ -27,7 +31,8 @@
             (setups)
             (tests
               (test "A passing test" (options) (lambda (e) #t))
-              (test "A failing test" (options) (lambda (e) #f)))))))
+              (test "A failing test" (options) (lambda (e) #f)))
+            (teardowns)))))
     (tests
       (test "Should have one pass and one fail"
         (options)
@@ -48,4 +53,7 @@
             "A failing test"
             (car (suite-fails (e 's)))))))
     (teardowns)))
+
+(test-assertions)
+(test-suite)
 
