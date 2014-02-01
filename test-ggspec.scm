@@ -5,7 +5,7 @@
 ;; GitHub, Reddit, Twitter: yawaramin
 (use-modules (my ggspec))
 
-(define (test-assertions)
+(define test-assertions
   (suite "ggspec assertion functions"
     (options)
     (setups)
@@ -19,20 +19,19 @@
             ((e 'assert-equal) "a" "a")))))
     (teardowns)))
 
-(define (test-suite)
+(define test-suite
   (suite "A ggspec example suite"
     (options)
     (setups
       (setup 's
-        (lambda ()
-          (suite "A test-internal suite"
-            (options
-              (option 'output-cb none))
-            (setups)
-            (tests
-              (test "A passing test" (options) (lambda (e) #t))
-              (test "A failing test" (options) (lambda (e) #f)))
-            (teardowns)))))
+        (suite "A test-internal suite"
+          (options
+            (option 'output-cb none))
+          (setups)
+          (tests
+            (test "A passing test" (options) (lambda (e) #t))
+            (test "A failing test" (options) (lambda (e) #f)))
+          (teardowns))))
     (tests
       (test "Should have one pass and one fail"
         (options)

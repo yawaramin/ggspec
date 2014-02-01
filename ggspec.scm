@@ -120,69 +120,74 @@
         expr: the body of the test.
 
   Returns
-    (list desc pass-list fail-list)
+    (lambda ()
+      (list desc pass-list fail-list)
 
-      pass-list: (list desc ...)
-      fail-list: (list desc ...)
+        pass-list: (list desc ...)
+        fail-list: (list desc ...)
 
-        desc: string: a description."
-  (define output-cb
-    (let ((v (assoc-ref opts 'output-cb))) (if v v text-normal)))
-  (output-cb #:suite-desc desc)
+          desc: string: a description.
 
-  (let*
-    ((suite-bindings
-      (list
-        (cons
-          'assert-equal
-          (lambda (expected got)
-            (assert-equal-to output-cb expected got)))
-        (cons
-          'assert-not-equal
-          (lambda (expected got)
-            (assert-not-equal-to output-cb expected got)))
-        (cons
-          'assert-true
-          (lambda (x) (assert-true-to output-cb x)))
-        (cons
-          'assert-false
-          (lambda (x) (assert-false-to output-cb x)))))
+    An uncalled procedure which, when called, will return the results of
+    running the test suite."
+  (lambda ()
+    (define output-cb
+      (let ((v (assoc-ref opts 'output-cb))) (if v v text-normal)))
+    (output-cb #:suite-desc desc)
 
-    ;; Intermediate result structure:
-    ;;
-    ;; (list
-    ;;   (cons 'pass desc) ...
-    ;;   (cons 'fail desc) ...)
-    (intermediate-results
-      (map
-        (lambda (tst)
-          (define test-desc (car tst))
-          (define test-bindings
-            (append
-              suite-bindings
-              (map
-                (lambda (sup) (cons (car sup) ((cdr sup))))
-                (or sups end))))
-          (define (env name) (assoc-ref test-bindings name))
-          (output-cb #:test-desc test-desc)
-          (let
-            ((result ((caddr tst) env)))
-            (cons
-              (if result
-                (begin
-                  (output-cb #:test-status 'pass)
-                  'pass)
-                (begin
-                  (output-cb #:test-status 'fail)
-                  'fail))
-              test-desc)))
-        (or tsts end))))
+    (let*
+      ((suite-bindings
+        (list
+          (cons
+            'assert-equal
+            (lambda (expected got)
+              (assert-equal-to output-cb expected got)))
+          (cons
+            'assert-not-equal
+            (lambda (expected got)
+              (assert-not-equal-to output-cb expected got)))
+          (cons
+            'assert-true
+            (lambda (x) (assert-true-to output-cb x)))
+          (cons
+            'assert-false
+            (lambda (x) (assert-false-to output-cb x)))))
 
-    (receive (passes fails)
-      (partition
-        (lambda (result) (equal? 'pass (car result)))
-        intermediate-results)
-      (list desc (map cdr passes) (map cdr fails)))))
+      ;; Intermediate result structure:
+      ;;
+      ;; (list
+      ;;   (cons 'pass desc) ...
+      ;;   (cons 'fail desc) ...)
+      (intermediate-results
+        (map
+          (lambda (tst)
+            (define test-desc (car tst))
+            (define test-bindings
+              (append
+                suite-bindings
+                (map
+                  (lambda (sup) (cons (car sup) ((cdr sup))))
+                  (or sups end))))
+            (define (env name) (assoc-ref test-bindings name))
+            (output-cb #:test-desc test-desc)
+            (let
+              ((result ((caddr tst) env)))
+              (cons
+                (if result
+                  (begin
+                    (output-cb #:test-status 'pass)
+                    'pass)
+                  (begin
+                    (output-cb #:test-status 'fail)
+                    'fail))
+                test-desc)))
+          (or tsts end))))
+
+      (receive (passes fails)
+        (partition
+          (lambda (result) (equal? 'pass (car result)))
+          intermediate-results)
+        (list desc (map cdr passes) (map cdr fails))))))
 
 (define options list)
 (define option cons)
