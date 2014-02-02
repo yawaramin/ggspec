@@ -55,9 +55,7 @@
             (test "A failing test" (options) (lambda (e) #f)))
           (options
             (option 'output-cb none))
-          (setups)
-          (teardowns))))
-    (teardowns)))
+          (setups))))))
 
 (test-assertions)
 (test-suite)
