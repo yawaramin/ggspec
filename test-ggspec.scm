@@ -24,8 +24,8 @@
         (options)
         (lambda (e)
           (and
-            ((e 'assert-equal) 1 (length (suite-passes (e 's))))
-            ((e 'assert-equal) 1 (length (suite-fails (e 's)))))))
+            ((e 'assert-equal) 1 (length (suite-passes ((e 's)))))
+            ((e 'assert-equal) 1 (length (suite-fails ((e 's))))))))
       (test "Should make its creation arguments available"
         (options)
         (lambda (e)
@@ -39,23 +39,24 @@
         (lambda (e)
           ((e 'assert-equal)
             "A passing test"
-            (car (suite-passes (e 's))))))
+            (car (suite-passes ((e 's)))))))
       (test "Should name the failing test"
         (options)
         (lambda (e)
           ((e 'assert-equal)
             "A failing test"
-            (car (suite-fails (e 's)))))))
+            (car (suite-fails ((e 's))))))))
     (options (option 'output-cb text-verbose))
     (setups
       (setup 's
-        (suite "A test-internal suite"
-          (tests
-            (test "A passing test" (options) (lambda (e) #t))
-            (test "A failing test" (options) (lambda (e) #f)))
-          (options
-            (option 'output-cb none))
-          (setups))))))
+        (lambda ()
+          (suite "A test-internal suite"
+            (tests
+              (test "A passing test" (options) (lambda (e) #t))
+              (test "A failing test" (options) (lambda (e) #f)))
+            (options
+              (option 'output-cb none))
+            (setups)))))))
 
 (test-assertions)
 (test-suite)
