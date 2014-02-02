@@ -20,3 +20,9 @@
   - I want `assert-error` and `assert-not-error` functions to check that
     a piece of code does or does not cause an error to occur.
 
+  + As a test writer
+  - So that I can use the framework more easily
+  - I want to be able to use ggspec straight from its git cloned
+    repository directory without having to manipulate any environment
+    variables.
+
