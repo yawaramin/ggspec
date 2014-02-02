@@ -1,5 +1,4 @@
-;; ggspec - lightweight unit testing library for GNU Guile (and other
-;; Schemes?)
+;; ggspec - lightweight unit testing library for Guile
 ;; Copyright (c) 2014 Yawar Amin
 ;; See LICENSE file for details
 ;; GitHub, Reddit, Twitter: yawaramin
@@ -228,18 +227,33 @@
 ;; Arguments
 ;;   desc: string: a description of the test.
 
-;;   thunk: (lambda () expr ...): a function that takes no arguments and
-;;   returns either #t (test passed) or #f (test failed).
+;;   func: (lambda (e) expr ...): a function that takes a single
+;;   argument (see below) and returns either #t (test passed) or #f
+;;   (test failed).
+
+;;     e: alist: an association list of various previously-defined names
+;;     and their corresponding values. Two types of names are defined:
+
+;;     1. Names always automatically defined by ggspec before running
+;;     the test: 'assert-equal, 'assert-not-equal, etc. These are
+;;     defined by ggspec automatically because they depend on the suite
+;;     options like where to send test runtime messages to.
+
+;;     2. Names defined by the test writer by setting up names and
+;;     corresponding values in the suite setup section. The
+;;     corresponding values are evaluated anew each time a test is run,
+;;     which is why in the setup section you have to wrap each value up
+;;     inside a thunk.
 
 ;;   opts: same as the opts passed into the suite function, see above.
 
 ;; Returns
-;;   (list desc thunk opts): a two-member list of the unevaluated thunk
-;;   and the options passed in to the test.
+;;   (list desc opts func): a three-member list of the test description,
+;;   the options passed in to the test, and the unevaluated function.
 (define test
   (case-lambda
-    ((desc thunk opts) (list desc opts thunk))
-    ((desc thunk) (test desc thunk end))))
+    ((desc func opts) (list desc opts func))
+    ((desc func) (test desc func end))))
 
 (define teardowns list)
 (define teardown identity)

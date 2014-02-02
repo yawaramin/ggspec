@@ -1,5 +1,4 @@
-;; ggspec - lightweight unit testing library for GNU Guile (and other
-;; Schemes?)
+;; ggspec - lightweight unit testing library for Guile
 ;; Copyright (c) 2014 Yawar Amin
 ;; See LICENSE file for details
 ;; GitHub, Reddit, Twitter: yawaramin
