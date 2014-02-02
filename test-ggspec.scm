@@ -39,6 +39,14 @@
           (and
             ((e 'assert-equal) 1 (length (suite-passes (e 's))))
             ((e 'assert-equal) 1 (length (suite-fails (e 's)))))))
+      (test "Should make its creation arguments available"
+        (options)
+        (lambda (e)
+          (define args (suite-args))
+          (and
+            ((e 'assert-equal) "A test-internal suite" (car args))
+            ((e 'assert-equal) end (caddr args))
+            ((e 'assert-equal) end (list-ref args 4)))))
       (test "Should name the passing test"
         (options)
         (lambda (e)

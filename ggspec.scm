@@ -19,6 +19,7 @@
     text-verbose
     text-normal
     none
+    suite-args
     suite-passes
     suite-fails
     ))
@@ -119,6 +120,10 @@
         opts: same as above.
         expr: the body of the test.
 
+  Side Effects
+    Records all passed-in arguments as meta-information inside the suite
+    procedure, in the property named 'args.
+
   Returns
     (lambda ()
       (list desc pass-list fail-list)
@@ -130,6 +135,11 @@
 
     An uncalled procedure which, when called, will return the results of
     running the test suite."
+  (set-procedure-property!
+    suite
+    'args
+    (list desc opts sups tsts tdowns))
+
   (lambda ()
     (define output-cb
       (let ((v (assoc-ref opts 'output-cb))) (if v v text-normal)))
@@ -244,4 +254,5 @@
 
 (define (suite-passes s) (cadr s))
 (define (suite-fails s) (caddr s))
+(define (suite-args) (procedure-property suite 'args))
 
