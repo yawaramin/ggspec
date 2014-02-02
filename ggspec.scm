@@ -9,6 +9,7 @@
   #:use-module (ice-9 receive)
   #:export
     (
+    end
     suite
     options
     option
@@ -221,7 +222,25 @@
 (define setups list)
 (define setup cons)
 (define tests list)
-(define test list)
+
+;; Declares a test.
+
+;; Arguments
+;;   desc: string: a description of the test.
+
+;;   thunk: (lambda () expr ...): a function that takes no arguments and
+;;   returns either #t (test passed) or #f (test failed).
+
+;;   opts: same as the opts passed into the suite function, see above.
+
+;; Returns
+;;   (list desc thunk opts): a two-member list of the unevaluated thunk
+;;   and the options passed in to the test.
+(define test
+  (case-lambda
+    ((desc thunk opts) (list desc opts thunk))
+    ((desc thunk) (test desc thunk end))))
+
 (define teardowns list)
 (define teardown identity)
 (define text-verbose stubf)

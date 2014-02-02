@@ -9,7 +9,6 @@
   (suite "ggspec assertion functions"
     (tests
       (test "Should assert equality"
-        (options)
         (lambda (e)
           (and
             ((e 'assert-equal) 1 1)
@@ -21,13 +20,11 @@
   (suite "A ggspec example suite"
     (tests
       (test "Should have one pass and one fail"
-        (options)
         (lambda (e)
           (and
             ((e 'assert-equal) 1 (length (suite-passes ((e 's)))))
             ((e 'assert-equal) 1 (length (suite-fails ((e 's))))))))
       (test "Should make its creation arguments available"
-        (options)
         (lambda (e)
           (define args (suite-args))
           (and
@@ -35,13 +32,11 @@
             ((e 'assert-equal) end (caddr args))
             ((e 'assert-equal) end (list-ref args 4)))))
       (test "Should name the passing test"
-        (options)
         (lambda (e)
           ((e 'assert-equal)
             "A passing test"
             (car (suite-passes ((e 's)))))))
       (test "Should name the failing test"
-        (options)
         (lambda (e)
           ((e 'assert-equal)
             "A failing test"
@@ -52,8 +47,8 @@
         (lambda ()
           (suite "A test-internal suite"
             (tests
-              (test "A passing test" (options) (lambda (e) #t))
-              (test "A failing test" (options) (lambda (e) #f)))
+              (test "A passing test" (lambda (e) #t))
+              (test "A failing test" (lambda (e) #f)))
             (options
               (option 'output-cb none))
             (setups)))))))
