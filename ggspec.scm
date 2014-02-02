@@ -16,6 +16,7 @@
     tests
     test
     teardowns
+    teardown
     text-verbose
     text-normal
     none
@@ -37,7 +38,6 @@
 
 ;; A frequently-used stub.
 (define stubf (stub #f))
-(define teardown cons)
 (define end '())
 
 (define (println . args) (for-each display args) (newline))
@@ -181,7 +181,10 @@
             (define (env name) (assoc-ref test-bindings name))
             (output-cb #:test-desc test-desc)
             (let
+              ;; Run the test's thunk:
               ((result ((caddr tst) env)))
+              ;; Run all the teardowns:
+              (for-each (lambda (td) (td)) tdowns)
               (cons
                 (if result
                   (begin
@@ -206,6 +209,7 @@
 (define tests list)
 (define test list)
 (define teardowns list)
+(define teardown identity)
 (define text-verbose stubf)
 
 (define (kwalist arglist)
