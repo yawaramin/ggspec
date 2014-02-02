@@ -50,8 +50,7 @@
               (test "A passing test" (lambda (e) #t))
               (test "A failing test" (lambda (e) #f)))
             (options
-              (option 'output-cb none))
-            (setups)))))))
+              (option 'output-cb none))))))))
 
 (test-assertions)
 (test-suite)
