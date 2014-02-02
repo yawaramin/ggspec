@@ -5,6 +5,7 @@
 ;; GitHub, Reddit, Twitter: yawaramin
 (define-module (my ggspec)
   #:use-module (srfi srfi-1)
+  #:use-module (srfi srfi-16)
   #:use-module (ice-9 receive)
   #:export
     (
@@ -85,122 +86,135 @@
 (define (assert-false-to output-cb x)
   (assert-equal-to output-cb #f (if x #t #f)))
 
-(define (suite desc opts sups tsts tdowns)
-  "Declares a test suite.
+;; Declares a test suite.
 
-  Arguments
-    desc: string: description of the suite.
+;; Arguments
+;;   desc: string: description of the suite.
 
-    opts: (list opt ...): a collection of options to pass into the
-    suite.
+;;   tsts: (list tst ...): a collection of tests to run in this suite.
 
-      opt:
-        (list
-          (cons opt-name opt-val) ...)
+;;     tst: (list desc opts (lambda (e) expr))
 
-        opt-name: symbol: the name of the option.
-        opt-val: any: the value being given to the option.
+;;       desc: string: description of the test.
+;;       opts: same as above.
+;;       expr: the body of the test.
 
-    sups: (list sup ...): a collection of setup names and values to pass
-    into each test.
+;;   opts: (list opt ...): a collection of options to pass into the
+;;   suite.
 
-      sup: (cons sup-name sup-val)
+;;     opt:
+;;       (list
+;;         (cons opt-name opt-val) ...)
 
-        sup-name: symbol
-        sup-val: (lambda () expr)
+;;       opt-name: symbol: the name of the option.
+;;       opt-val: any: the value being given to the option.
 
-          expr: any: the value to be given to the setup variable during
-          each test run. Will be re-evaluated each time a test is run.
+;;   sups: (list sup ...): a collection of setup names and values to
+;;   pass into each test.
 
-    tsts: (list tst ...): a collection of tests to run in this suite.
+;;     sup: (cons sup-name sup-val)
 
-      tst: (list desc opts (lambda (e) expr))
+;;       sup-name: symbol
+;;       sup-val: (lambda () expr)
 
-        desc: string: description of the test.
-        opts: same as above.
-        expr: the body of the test.
+;;         expr: any: the value to be given to the setup variable
+;;         during each test run. Will be re-evaluated each time a test
+;;         is run.
 
-  Side Effects
-    Records all passed-in arguments as meta-information inside the suite
-    procedure, in the property named 'args.
+;;   tdowns: (list tdown ...): a collection of teardowns to run after
+;;   running each test.
 
-  Returns
-    (lambda ()
-      (list desc pass-list fail-list)
+;;     tdown: (teardown (lambda () body ...))
 
-        pass-list: (list desc ...)
-        fail-list: (list desc ...)
+;;       body: the body expressions of the teardown.
 
-          desc: string: a description.
+;; Side Effects
+;;   Records all passed-in arguments as meta-information inside the
+;;   suite procedure, in the property named 'args.
 
-    An uncalled procedure which, when called, will return the results of
-    running the test suite."
-  (set-procedure-property!
-    suite
-    'args
-    (list desc opts sups tsts tdowns))
+;; Returns
+;;   (lambda ()
+;;     (list desc pass-list fail-list)
 
-  (lambda ()
-    (define output-cb
-      (let ((v (assoc-ref opts 'output-cb))) (if v v text-normal)))
-    (output-cb #:suite-desc desc)
+;;       pass-list: (list desc ...)
+;;       fail-list: (list desc ...)
 
-    (let*
-      ((suite-bindings
-        (list
-          (cons
-            'assert-equal
-            (lambda (expected got)
-              (assert-equal-to output-cb expected got)))
-          (cons
-            'assert-not-equal
-            (lambda (expected got)
-              (assert-not-equal-to output-cb expected got)))
-          (cons
-            'assert-true
-            (lambda (x) (assert-true-to output-cb x)))
-          (cons
-            'assert-false
-            (lambda (x) (assert-false-to output-cb x)))))
+;;         desc: string: a description.
 
-      ;; Intermediate result structure:
-      ;;
-      ;; (list
-      ;;   (cons 'pass desc) ...
-      ;;   (cons 'fail desc) ...)
-      (intermediate-results
-        (map
-          (lambda (tst)
-            (define test-desc (car tst))
-            (define test-bindings
-              (append
-                suite-bindings
-                (map
-                  (lambda (sup) (cons (car sup) ((cdr sup))))
-                  (or sups end))))
-            (define (env name) (assoc-ref test-bindings name))
-            (output-cb #:test-desc test-desc)
-            (let
-              ;; Run the test's thunk:
-              ((result ((caddr tst) env)))
-              ;; Run all the teardowns:
-              (for-each (lambda (td) (td)) tdowns)
+;;   An uncalled procedure which, when called, will return the results
+;;   of running the test suite.
+(define suite
+  (case-lambda
+    ((desc tsts opts sups tdowns)
+      (set-procedure-property!
+        suite
+        'args
+        (list desc opts sups tsts tdowns))
+
+      (lambda ()
+        (define output-cb
+          (let ((v (assoc-ref opts 'output-cb))) (if v v text-normal)))
+        (output-cb #:suite-desc desc)
+
+        (let*
+          ((suite-bindings
+            (list
               (cons
-                (if result
-                  (begin
-                    (output-cb #:test-status 'pass)
-                    'pass)
-                  (begin
-                    (output-cb #:test-status 'fail)
-                    'fail))
-                test-desc)))
-          (or tsts end))))
+                'assert-equal
+                (lambda (expected got)
+                  (assert-equal-to output-cb expected got)))
+              (cons
+                'assert-not-equal
+                (lambda (expected got)
+                  (assert-not-equal-to output-cb expected got)))
+              (cons
+                'assert-true
+                (lambda (x) (assert-true-to output-cb x)))
+              (cons
+                'assert-false
+                (lambda (x) (assert-false-to output-cb x)))))
 
-      (receive (passes fails)
-        (partition
-          (lambda (result) (equal? 'pass (car result)))
-          intermediate-results)
-        (list desc (map cdr passes) (map cdr fails))))))
+          ;; Intermediate result structure:
+          ;;
+          ;; (list
+          ;;   (cons 'pass desc) ...
+          ;;   (cons 'fail desc) ...)
+          (intermediate-results
+            (map
+              (lambda (tst)
+                (define test-desc (car tst))
+                (define test-bindings
+                  (append
+                    suite-bindings
+                    (map
+                      (lambda (sup) (cons (car sup) ((cdr sup))))
+                      (or sups end))))
+                (define (env name) (assoc-ref test-bindings name))
+                (output-cb #:test-desc test-desc)
+                (let
+                  ;; Run the test's thunk:
+                  ((result ((caddr tst) env)))
+                  ;; Run all the teardowns thunks:
+                  (for-each (lambda (td) (td)) tdowns)
+                  (cons
+                    (if result
+                      (begin
+                        (output-cb #:test-status 'pass)
+                        'pass)
+                      (begin
+                        (output-cb #:test-status 'fail)
+                        'fail))
+                    test-desc)))
+              (or tsts end))))
+
+          (receive (passes fails)
+            (partition
+              (lambda (result) (equal? 'pass (car result)))
+              intermediate-results)
+            (list desc (map cdr passes) (map cdr fails))))))
+    ((desc tsts) (suite desc tsts end end end))
+    ((desc tsts opts) (suite desc tsts opts end end))
+    ((desc tsts opts sups) (suite desc tsts opts sups end))))
 
 (define options list)
 (define option cons)

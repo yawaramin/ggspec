@@ -7,8 +7,6 @@
 
 (define test-assertions
   (suite "ggspec assertion functions"
-    (options)
-    (setups)
     (tests
       (test "Should assert equality"
         (options)
@@ -17,21 +15,10 @@
             ((e 'assert-equal) 1 1)
             ((e 'assert-equal) #\a #\a)
             ((e 'assert-equal) "a" "a")))))
-    (teardowns)))
+    (options (option 'output-cb text-verbose))))
 
 (define test-suite
   (suite "A ggspec example suite"
-    (options)
-    (setups
-      (setup 's
-        (suite "A test-internal suite"
-          (options
-            (option 'output-cb none))
-          (setups)
-          (tests
-            (test "A passing test" (options) (lambda (e) #t))
-            (test "A failing test" (options) (lambda (e) #f)))
-          (teardowns))))
     (tests
       (test "Should have one pass and one fail"
         (options)
@@ -59,6 +46,17 @@
           ((e 'assert-equal)
             "A failing test"
             (car (suite-fails (e 's)))))))
+    (options (option 'output-cb text-verbose))
+    (setups
+      (setup 's
+        (suite "A test-internal suite"
+          (tests
+            (test "A passing test" (options) (lambda (e) #t))
+            (test "A failing test" (options) (lambda (e) #f)))
+          (options
+            (option 'output-cb none))
+          (setups)
+          (teardowns))))
     (teardowns)))
 
 (test-assertions)
