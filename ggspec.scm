@@ -257,7 +257,6 @@
 
 (define teardowns list)
 (define teardown identity)
-(define text-verbose stubf)
 
 (define (kwalist arglist)
   "Turn a list of keyword arguments into an alist of symbols and
