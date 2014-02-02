@@ -26,6 +26,14 @@
     suite-fails
     ))
 
+(use-syntax (ice-9 syncase))
+(define-syntax if-let
+  (syntax-rules ()
+    ((_ name val then-exp else-exp)
+      (let ((name val)) (if name then-exp else-exp)))
+    ((_ name val then-exp)
+      (if-let name val then-exp #f))))
+
 (define (stub retval)
   "Stubs a function to return a canned value.
 
@@ -190,23 +198,27 @@
                       (lambda (sup) (cons (car sup) ((cdr sup))))
                       (or sups end))))
                 (define (env name) (assoc-ref test-bindings name))
-                (output-cb #:test-desc test-desc)
                 (let
-                  ;; Run the test's thunk:
+                  ;; Run the test's function:
                   ((result ((caddr tst) env)))
                   ;; Run all the teardowns thunks:
                   (for-each (lambda (td) (td)) tdowns)
                   (cons
                     (if result
                       (begin
-                        (output-cb #:test-status 'pass)
+                        (output-cb
+                          #:test-desc test-desc
+                          #:test-status 'pass)
                         'pass)
                       (begin
-                        (output-cb #:test-status 'fail)
+                        (output-cb
+                          #:test-desc test-desc
+                          #:test-status 'fail)
                         'fail))
                     test-desc)))
               (or tsts end))))
 
+          (output-cb #:suite-status 'complete)
           (receive (passes fails)
             (partition
               (lambda (result) (equal? 'pass (car result)))
@@ -293,12 +305,28 @@
 
 (define (text-normal . kwargs)
   (define kws (kwalist kwargs))
-  (define (when-then-print sym msg)
-    (if (assoc sym kws)
-      (println msg (assoc-ref kws sym))))
+  (define (kw sym) (assoc-ref kws sym))
 
-  (when-then-print 'suite-desc "  Suite: ")
-  (when-then-print 'test-status "    Test "))
+  (if-let suite-desc (kw 'suite-desc)
+    (println "  Suite: " suite-desc))
+
+  (if-let test-status (kw 'test-status)
+    (if-let test-desc (kw 'test-desc)
+      (if (equal? test-status 'fail)
+        (println "    Test (failed): " test-desc)
+        ;; Otherwise, the test passed.
+        (println "    Test (passed): " test-desc))))
+
+  ;; We definitely want to know if any asserts failed.
+  (if-let assert-status (kw 'assert-status)
+    (if (equal? assert-status 'fail)
+      (if-let expected (kw 'expected)
+        (begin
+          (println "      Expected: " expected)
+          (if-let got (kw 'got)
+            (println "      Got: " got)
+            (println "      Got: (unavailable)")))
+        (println "      Assert failed: details unavailable")))))
 
 (define none stubf)
 

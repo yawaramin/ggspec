@@ -12,8 +12,7 @@
           (and
             ((e 'assert-equal) 1 1)
             ((e 'assert-equal) #\a #\a)
-            ((e 'assert-equal) "a" "a")))))
-    (options (option 'output-cb text-verbose))))
+            ((e 'assert-equal) "a" "a")))))))
 
 (define test-suite
   (suite "A ggspec example suite"
@@ -40,7 +39,7 @@
           ((e 'assert-equal)
             "A failing test"
             (car (suite-fails ((e 's))))))))
-    (options (option 'output-cb text-verbose))
+    (options)
     (setups
       (setup 's
         (lambda ()
