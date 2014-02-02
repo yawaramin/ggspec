@@ -15,3 +15,8 @@
   - I want the default test output to show details of a test and its
     assertions _only if the test fails._
 
+  + As a test writer
+  - So that I can test for more kinds of scenarios
+  - I want `assert-error` and `assert-not-error` functions to check that
+    a piece of code does or does not cause an error to occur.
+
