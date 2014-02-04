@@ -12,7 +12,16 @@
           (and
             ((e 'assert-equal) 1 1)
             ((e 'assert-equal) #\a #\a)
-            ((e 'assert-equal) "a" "a")))))))
+            ((e 'assert-equal) "a" "a"))))
+      (test "Should assert an error if an error occurred"
+        (lambda (e) ((e 'assert-error) (lambda () (/ 1 0)))))
+      (test "Should not assert an error if an error did not occur"
+        (lambda (e) (not ((e 'assert-error) (lambda () (/ 1 1))))))
+      (test "Should assert an error did not occur if it did not"
+        (lambda (e) ((e 'assert-not-error) (lambda () (/ 1 1)))))
+      (test "Should not assert an error did not occur if it did"
+        (lambda (e)
+          (not ((e 'assert-not-error) (lambda () (/ 1 0)))))))))
 
 (define test-suite
   (suite "A ggspec example suite"

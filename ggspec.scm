@@ -94,6 +94,51 @@
 (define (assert-false-to output-cb x)
   (assert-equal-to output-cb #f (if x #t #f)))
 
+(define (assert-error-to output-cb thunk)
+  "Says that the given expression _should_ cause an error.
+
+  Arguments
+    output-cb: same as for assert-equal-to.
+
+    thunk: a function that takes no arguments and returns the value to
+    be tested for whether it causes an error or not.
+
+  Returns
+    #t if the value returned from the given thunk causes an error on
+    being evaluated, #f otherwise."
+  (if (catch #t (lambda () (thunk) #f) (stub #t))
+    (begin
+      (output-cb #:assert-status 'pass)
+      #t)
+    (begin
+      (output-cb
+        #:expected "(an error)"
+        #:got "(no error)"
+        #:assert-status 'fail)
+      #f)))
+
+(define (assert-not-error-to output-cb thunk)
+  "Says that the given expression _should not_ cause an error.
+
+  Arguments
+    output-cb: same as for assert-error-to.
+
+    thunk: same as for assert-error-to.
+
+  Returns
+    #t if the value returned from the given thunk does not cause an
+    error on being evaluated, #f otherwise."
+  (if (catch #t (lambda () (thunk) #f) (stub #t))
+    (begin
+      (output-cb
+        #:expected "(no error)"
+        #:got "(an error)"
+        #:assert-status 'fail)
+      #f)
+    (begin
+      (output-cb #:assert-status 'pass)
+      #t)))
+
 ;; Declares a test suite.
 
 ;; Arguments
@@ -180,7 +225,13 @@
                 (lambda (x) (assert-true-to output-cb x)))
               (cons
                 'assert-false
-                (lambda (x) (assert-false-to output-cb x)))))
+                (lambda (x) (assert-false-to output-cb x)))
+              (cons
+                'assert-error
+                (lambda (x) (assert-error-to output-cb x)))
+              (cons
+                'assert-not-error
+                (lambda (x) (assert-not-error-to output-cb x)))))
 
           ;; Intermediate result structure:
           ;;
