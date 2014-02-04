@@ -24,6 +24,7 @@
     suite-args
     suite-passes
     suite-fails
+    kwalist
     ))
 
 (use-syntax (ice-9 syncase))
