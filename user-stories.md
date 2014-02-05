@@ -16,3 +16,8 @@
     repository directory without having to manipulate any environment
     variables.
 
+  + As a test reader
+  - So that I can read tests more easily
+  - I want test descriptions to be printed before (any) assertion
+    failures.
+
