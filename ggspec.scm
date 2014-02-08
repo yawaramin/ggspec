@@ -332,8 +332,5 @@
         (println "      Assert failed: details unavailable")))))
 
 (define none stubf)
-
-(define (suite-passes s) (cadr s))
-(define (suite-fails s) (caddr s))
 (define (suite-args) (procedure-property suite 'args))
 
