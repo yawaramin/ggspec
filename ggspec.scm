@@ -182,13 +182,7 @@
                 (lambda (x) (assert-true-to output-cb x)))
               (cons
                 'assert-false
-                (lambda (x) (assert-false-to output-cb x)))
-              (cons
-                'assert-error
-                (lambda (x) (assert-error-to output-cb x)))
-              (cons
-                'assert-not-error
-                (lambda (x) (assert-not-error-to output-cb x)))))
+                (lambda (x) (assert-false-to output-cb x)))))
           (intermediate-results
             (map
               (lambda (tst)
