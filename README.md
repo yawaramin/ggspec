@@ -16,12 +16,27 @@ run them; and _then_ the framework was written around the tests.
 
 ## Installation
 
-### Guile
+Assuming you have cloned the `ggspec` repository to a directory also
+named `ggspec`, create a symbolic link to the `ggspec` directory inside
+any directory in your `$GUILE_LOAD_PATH` (Windows: `%GUILE_LOAD_PATH%`).
 
-Put the `ggspec.scm` file inside a directory named `my` in your
-`$GUILE_LOAD_PATH` (you can add your personal directories to this path).
-E.g., I have `~/guile` in my load path. So the Scheme file is in:
-`~/guile/my/ggspec.scm`.
+E.g., if you have `~/guile` in your Guile load path, and have cloned the
+repo into `~/code/ggspec`, then run:
+
+```
+cd ~/guile
+ln -s ~/code/ggspec
+```
+
+## Verifying the framework itself
+
+As I described earlier, the `ggspec` framework is tested using itself.
+You can run the tests:
+
+```
+cd ~/code/ggspec
+./ggspec .
+```
 
 ## Minimal complete example
 
