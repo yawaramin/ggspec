@@ -340,7 +340,10 @@
             (begin
               (println "      Expected: not " not-expected)
               (println "      Got: " got))))
-        (println "      Assert failed: details unavailable")))))
+        (println "      Assert failed: details unavailable"))))
+
+  (if-let suite-status (kw 'suite-status)
+    (newline)))
 
 (define none stubf)
 (define (suite-args) (procedure-property suite 'args))
