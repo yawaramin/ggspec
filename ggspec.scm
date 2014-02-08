@@ -224,7 +224,20 @@
 (define options list)
 (define option cons)
 (define setups list)
-(define setup cons)
+
+;; Declares a setup symbol-binding.
+
+;; Arguments
+;;   sym: symbol: a symbol by which to refer to the bound value.
+
+;;   expr: any: a value to bind to the symbol above. This value may
+;;   later be accessed from any test in the same suite by calling the
+;;   test's 'environment' (usually e) with the symbol. E.g., (e 'sym).
+(define-syntax setup
+  (syntax-rules ()
+    ((_ sym expr)
+      (cons sym (lambda () expr)))))
+
 (define tests list)
 
 ;; Declares a test.

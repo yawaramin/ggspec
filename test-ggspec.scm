@@ -51,10 +51,10 @@
             (kwalist (e 'l4))))))
     (options)
     (setups
-      (setup 'l1 (lambda () (list #:a 1)))
-      (setup 'l2 (lambda () (list #:a 1 #:b 2)))
-      (setup 'l3 (lambda () (list #:a 1 #:b 2 #:c 3)))
-      (setup 'l4 (lambda () (list #:a 1 #:b 2 #:c 3 #:d 4))))))
+      (setup 'l1 (list #:a 1))
+      (setup 'l2 (list #:a 1 #:b 2))
+      (setup 'l3 (list #:a 1 #:b 2 #:c 3))
+      (setup 'l4 (list #:a 1 #:b 2 #:c 3 #:d 4)))))
 
 (define test-assertions
   (suite "ggspec assertion functions"
@@ -91,13 +91,12 @@
     (options)
     (setups
       (setup 's
-        (lambda ()
-          ((suite "A test-internal suite"
-            (tests
-              (test "A passing test" e #t)
-              (test "A failing test" e #f))
-            (options
-              (option 'output-cb none)))))))))
+        ((suite "A test-internal suite"
+          (tests
+            (test "A passing test" e #t)
+            (test "A failing test" e #f))
+          (options
+            (option 'output-cb none))))))))
 
 (test-kwalist)
 (test-assertions)
