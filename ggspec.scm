@@ -27,6 +27,7 @@
     ))
 
 (use-syntax (ice-9 syncase))
+
 (define-syntax if-let
   (syntax-rules ()
     ((_ name val then-exp else-exp)
@@ -273,12 +274,8 @@
 ;; Arguments
 ;;   desc: string: a description of the test.
 
-;;   func: (lambda (e) expr ...): a function that takes a single
-;;   argument (see below) and returns either #t (test passed) or #f
-;;   (test failed).
-
-;;     e: alist: an association list of various previously-defined names
-;;     and their corresponding values. Two types of names are defined:
+;;   env: an 'environment' (an alist of names and bindings) that is
+;;   passed in to the test. Two types of names are defined:
 
 ;;     1. Names always automatically defined by ggspec before running
 ;;     the test: 'assert-equal, 'assert-not-equal, etc. These are
@@ -291,15 +288,18 @@
 ;;     which is why in the setup section you have to wrap each value up
 ;;     inside a thunk.
 
-;;   opts: same as the opts passed into the suite function, see above.
+;;   expr ...: a variable number of expressions that make up the body of
+;;   the test. These will be wrapped inside a function and the function
+;;   will be passed in the 'environment' env from above.
 
 ;; Returns
 ;;   (list desc opts func): a three-member list of the test description,
-;;   the options passed in to the test, and the unevaluated function.
-(define test
-  (case-lambda
-    ((desc func opts) (list desc opts func))
-    ((desc func) (test desc func end))))
+;;   the options passed in to the test, and the unevaluated function
+;;   making up the body of the test.
+(define-syntax test
+  (syntax-rules ()
+    ((_ desc env expr ...)
+      (list desc end (lambda (env) expr ...)))))
 
 (define teardowns list)
 (define teardown identity)
