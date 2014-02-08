@@ -30,13 +30,12 @@ E.g., I have `~/guile` in my load path. So the Scheme file is in:
     guile> (define demo-suite (suite "Hello ggspec" end))
     guile> (demo-suite)
       Suite: Hello ggspec
-    ("Hello ggspec" () ())
+    (0 0)
 
-The last line above shows the suite description, a list of passing
-tests, and a list of failing tests. Since I didn't specify _any_ tests,
-both lists are empty.
+The last line above shows the number of passing tests and the number of
+failing tests. Since we didn't write _any_ tests here, but are zero.
 
-## Documentation
+## Tutorial
 
 See the `ggspec.scm` file for a detailed reference. A short tutorial (in
 the context of Test-Driven Development):
@@ -48,61 +47,78 @@ separate files.
 
 First you write a failing test:
 
-    (use-modules (my ggspec))
+```scheme
+(use-modules (my ggspec))
 
-    (define sqr-suite ;; Nothing significant about the name sqr-suite.
-      (suite "The sqr function"
-        (tests
-          (test "Should square 1 correctly"
-            (lambda (e)
-              ((e 'assert-equal) 1 (sqr 1)))))))
+(define sqr-suite ; Nothing significant about the name sqr-suite.
+  (suite "The sqr function"
+    (tests
+      (test "Should square 1 correctly"
+        ((e 'assert-equal) 1 (sqr 1))))))
 
-    (sqr-suite) ;; Run the suite.
+(sqr-suite) ; Run the suite.
+```
 
 This suite will fail because the `sqr` function does not exist:
 
-      Suite: The sqr function
-    ERROR: Unbound variable: sqr
+```
+  Suite: The sqr function
+ERROR: Unbound variable: sqr
+```
 
 Now implement it to make the test pass:
 
-    (define (sqr x) 1))
+```scheme
+(define (sqr x) 1)
+```
 
 The test will now pass because we have 'cheated' to make it so:
 
-      Suite: The sqr function
-        Test pass
+```
+  Suite: The sqr function
+    Test (passed): Should square 1 correctly
+```
 
-Now we extend the suite to another example:
+Now we extend the suite to another 'example':
 
-    (use-modules (my ggspec))
+```scheme
+(use-modules (my ggspec))
 
-    (define sqr-suite ;; Nothing significant about the name sqr-suite.
-      (suite "The sqr function"
-        (tests
-          (test "Should square 1 correctly"
-            (lambda (e)
-              ((e 'assert-equal) 1 (sqr 1))))
-          (test "Should square 2 correctly"
-            (lambda (e)
-              ((e 'assert-equal) 4 (sqr 2)))))))
+(define sqr-suite ; Nothing significant about the name sqr-suite.
+  (suite "The sqr function"
+    (tests
+      (test "Should square 1 correctly"
+        e
+        ((e 'assert-equal) 1 (sqr 1)))
+      (test "Should square 2 correctly"
+        e
+        ((e 'assert-equal) 4 (sqr 2))))))
 
-    (sqr-suite)
+(sqr-suite)
+```
 
 This will now fail, again, because the `sqr` function is hard-coded to
 always return `1`:
 
-      Suite: The sqr function
-        Test pass
-        Test fail
+```
+  Suite: The sqr function
+    Test (passed): Should square 1 correctly
+      Expected: 4
+      Got: 1
+    Test (failed): Should square 2 correctly
+```
 
 Now we fix that:
 
-    (define (sqr x) (* x x))
+```scheme
+(define (sqr x) (* x x))
+```
 
 This time the test will pass because `sqr` handles the general case:
 
-      Suite: The sqr function
-        Test pass
-        Test pass
+```
+  Suite: The sqr function
+    Test (passed): Should square 1 correctly
+    Test (passed): Should square 2 correctly
+```
 
