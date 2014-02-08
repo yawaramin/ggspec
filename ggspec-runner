@@ -1,0 +1,35 @@
+#!/usr/bin/env guile
+!#
+(use-modules (my ggspec))
+
+(define (run-file fname)
+  "Run all test suites found in the given file, and aggregate and return
+  the number of passed and failed tests.
+
+  Arguments
+    fname: string: the name of the file to look in for test suites.
+    Assumed to be in the current directory.
+
+  Returns
+    (list num-passes num-fails): same as in the suite function."
+  (call-with-input-file
+    fname
+    (lambda (f)
+      (let loop
+        ((form (read f))
+        (num-passes 0)
+        (num-fails 0))
+
+        (if (eof-object? form)
+          (list num-passes num-fails)
+          ;; Run the current test suite.
+          (let ((results (eval form (current-module))))
+            (loop
+              (read f)
+              (+ num-passes (car results))
+              (+ num-fails (cadr results)))))))))
+
+(run-file "test-ggspec.scm")
+
+; vim:set ft=scheme:
+

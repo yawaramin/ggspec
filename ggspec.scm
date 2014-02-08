@@ -145,71 +145,61 @@
 ;;   suite procedure, in the property named 'args.
 
 ;; Returns
-;;   (lambda ()
-;;     (list num-passes num-fails)
+;;   (list num-passes num-fails)
 
-;;       num-passes: number: the number of passed tests.
-;;       num-fails: number: the number of failed tests.
-
-;;   An uncalled procedure which, when called, will return the number of
-;;   passed and the number of failed tests.
+;;     num-passes: number: the number of passed tests.
+;;     num-fails: number: the number of failed tests.
 (define suite
   (case-lambda
     ((desc tsts opts sups tdowns)
-      (set-procedure-property!
-        suite
-        'args
-        (list desc opts sups tsts tdowns))
+      (define output-cb
+        (let ((v (assoc-ref opts 'output-cb))) (if v v text-normal)))
+      (output-cb #:suite-desc desc)
 
-      (lambda ()
-        (define output-cb
-          (let ((v (assoc-ref opts 'output-cb))) (if v v text-normal)))
-        (output-cb #:suite-desc desc)
+      (let*
+        ((suite-bindings
+          (list
+            (cons
+              'assert-equal
+              (lambda (expected got)
+                (assert-equal-to output-cb expected got)))
+            (cons
+              'assert-not-equal
+              (lambda (expected got)
+                (assert-not-equal-to output-cb expected got)))
+            (cons
+              'assert-true
+              (lambda (x) (assert-true-to output-cb x)))
+            (cons
+              'assert-false
+              (lambda (x) (assert-false-to output-cb x)))))
+        (intermediate-results
+          (map
+            (lambda (tst)
+              (define test-desc (car tst))
+              (define test-bindings
+                (append
+                  suite-bindings
+                  (map
+                    (lambda (sup) (cons (car sup) ((cdr sup))))
+                    (or sups end))))
+              (define (env name) (assoc-ref test-bindings name))
+              (output-cb #:test-desc test-desc)
+              (let
+                ;; Run the test's function:
+                ((result ((caddr tst) env)))
+                ;; Run all the teardowns thunks:
+                (for-each (lambda (td) (td)) tdowns)
+                (output-cb #:test-status (if result 'pass 'fail))
+                result))
+            (or tsts end)))
+        (num-tests
+          (length intermediate-results))
+        (num-passes
+          (length (filter identity intermediate-results))))
 
-        (let*
-          ((suite-bindings
-            (list
-              (cons
-                'assert-equal
-                (lambda (expected got)
-                  (assert-equal-to output-cb expected got)))
-              (cons
-                'assert-not-equal
-                (lambda (expected got)
-                  (assert-not-equal-to output-cb expected got)))
-              (cons
-                'assert-true
-                (lambda (x) (assert-true-to output-cb x)))
-              (cons
-                'assert-false
-                (lambda (x) (assert-false-to output-cb x)))))
-          (intermediate-results
-            (map
-              (lambda (tst)
-                (define test-desc (car tst))
-                (define test-bindings
-                  (append
-                    suite-bindings
-                    (map
-                      (lambda (sup) (cons (car sup) ((cdr sup))))
-                      (or sups end))))
-                (define (env name) (assoc-ref test-bindings name))
-                (output-cb #:test-desc test-desc)
-                (let
-                  ;; Run the test's function:
-                  ((result ((caddr tst) env)))
-                  ;; Run all the teardowns thunks:
-                  (for-each (lambda (td) (td)) tdowns)
-                  (output-cb #:test-status (if result 'pass 'fail))
-                  result))
-              (or tsts end)))
-          (num-tests
-            (length intermediate-results))
-          (num-passes
-            (length (filter identity intermediate-results))))
-
-          (output-cb #:suite-status 'complete)
-          (list num-passes (- num-tests num-passes)))))
+        (output-cb #:suite-status 'complete)
+        (list num-passes (- num-tests num-passes))))
     ((desc tsts) (suite desc tsts end end end))
     ((desc tsts opts) (suite desc tsts opts end end))
     ((desc tsts opts sups) (suite desc tsts opts sups end))))
@@ -346,5 +336,4 @@
     (newline)))
 
 (define none stubf)
-(define (suite-args) (procedure-property suite 'args))
 
