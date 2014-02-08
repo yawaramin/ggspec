@@ -14,28 +14,27 @@
         "Should throw an error if it is given an odd number of args"
         e
         (and
-          ((e 'assert-error) (lambda () (kwalist (list #:a))))
-          ((e 'assert-error) (lambda () (kwalist (list #:a 1 #:b))))
-          ((e 'assert-error)
-            (lambda () (kwalist (list #:a 1 #:b 2 #:c))))
-          ((e 'assert-error)
-            (lambda () (kwalist (list #:a 1 #:b 2 #:c 3 #:d))))))
+          ((e 'assert-true) (error? (kwalist (list #:a))))
+          ((e 'assert-true) (error? (kwalist (list #:a 1 #:b))))
+          ((e 'assert-true) (error? (kwalist (list #:a 1 #:b 2 #:c))))
+          ((e 'assert-true)
+            (error? (kwalist (list #:a 1 #:b 2 #:c 3 #:d))))))
       (test
         "Should not throw an error if it is given an even number of args"
         e
         (and
-          ((e 'assert-not-error) (lambda () (kwalist (e 'l1))))
-          ((e 'assert-not-error) (lambda () (kwalist (e 'l2))))
-          ((e 'assert-not-error) (lambda () (kwalist (e 'l3))))
-          ((e 'assert-not-error) (lambda () (kwalist (e 'l4))))))
+          ((e 'assert-false) (error? (kwalist (e 'l1))))
+          ((e 'assert-false) (error? (kwalist (e 'l2))))
+          ((e 'assert-false) (error? (kwalist (e 'l3))))
+          ((e 'assert-false) (error? (kwalist (e 'l4))))))
       (test
         "Should throw an error if odd-numbered args are not keywords"
         e
         (and
-          ((e 'assert-error) (lambda () (kwalist '(1 2))))
-          ((e 'assert-error) (lambda () (kwalist '(#\a 2))))
-          ((e 'assert-error) (lambda () (kwalist '("a" 2))))
-          ((e 'assert-error) (lambda () (kwalist '((1) 2))))))
+          ((e 'assert-true) (error? (kwalist '(1 2))))
+          ((e 'assert-true) (error? (kwalist '(#\a 2))))
+          ((e 'assert-true) (error? (kwalist '("a" 2))))
+          ((e 'assert-true) (error? (kwalist '((1) 2))))))
       (test
         "Should return an alist of symbols to values if given a list of keywords and values"
         e
@@ -68,16 +67,10 @@
           ((e 'assert-equal) "a" "a")))
       (test "Should assert an error if an error occurred"
         e
-        ((e 'assert-error) (lambda () (/ 1 0))))
+        ((e 'assert-true) (error? (/ 1 0))))
       (test "Should not assert an error if an error did not occur"
         e
-        (not ((e 'assert-error) (lambda () (/ 1 1)))))
-      (test "Should assert an error did not occur if it did not"
-        e
-        ((e 'assert-not-error) (lambda () (/ 1 1))))
-      (test "Should not assert an error did not occur if it did"
-        e
-        (not ((e 'assert-not-error) (lambda () (/ 1 0))))))))
+        ((e 'assert-false) (error? (/ 1 1)))))))
 
 (define test-suite
   (suite "A ggspec example suite"
