@@ -25,12 +25,14 @@ E.g., I have `~/guile` in my load path. So the Scheme file is in:
 
 ## Minimal complete example
 
-    $ guile
-    guile> (use-modules (my ggspec))
-    guile> (define demo-suite (suite "Hello ggspec" end))
-    guile> (demo-suite)
-      Suite: Hello ggspec
-    (0 0)
+```
+$ guile
+guile> (use-modules (my ggspec))
+guile> (define demo-suite (suite "Hello ggspec" end))
+guile> (demo-suite)
+  Suite: Hello ggspec
+(0 0)
+```
 
 The last line above shows the number of passing tests and the number of
 failing tests. Since we didn't write _any_ tests here, but are zero.
@@ -54,6 +56,7 @@ First you write a failing test:
   (suite "The sqr function"
     (tests
       (test "Should square 1 correctly"
+        e
         ((e 'assert-equal) 1 (sqr 1))))))
 
 (sqr-suite) ; Run the suite.
