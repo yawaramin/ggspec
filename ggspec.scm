@@ -266,7 +266,18 @@
       (list desc end (lambda (env) expr ...)))))
 
 (define teardowns list)
-(define teardown identity)
+
+;; Declares a teardown.
+
+;; Arguments
+;;   expr ...: any number of expressions.
+
+;; Returns
+;;   A thunk containing all the expressions above, ready to be
+;;   evaluated.
+(define-syntax teardown
+  (syntax-rules ()
+    ((_ expr ...) (lambda () expr ...))))
 
 (define (kwalist arglist)
   "Turn a list of keyword arguments into an alist of symbols and
