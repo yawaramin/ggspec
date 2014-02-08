@@ -194,14 +194,13 @@
                       (lambda (sup) (cons (car sup) ((cdr sup))))
                       (or sups end))))
                 (define (env name) (assoc-ref test-bindings name))
+                (output-cb #:test-desc test-desc)
                 (let
                   ;; Run the test's function:
                   ((result ((caddr tst) env)))
                   ;; Run all the teardowns thunks:
                   (for-each (lambda (td) (td)) tdowns)
-                  (output-cb
-                    #:test-desc test-desc
-                    #:test-status (if result 'pass 'fail))
+                  (output-cb #:test-status (if result 'pass 'fail))
                   result))
               (or tsts end)))
           (num-tests
@@ -309,22 +308,27 @@
   (if-let suite-desc (kw 'suite-desc)
     (println "  Suite: " suite-desc))
 
+  (if-let test-desc (kw 'test-desc)
+    (println "    Test: " test-desc))
+
   (if-let test-status (kw 'test-status)
-    (if-let test-desc (kw 'test-desc)
-      (if (equal? test-status 'fail)
-        (println "    Test (failed): " test-desc)
-        ;; Otherwise, the test passed.
-        (println "    Test (passed): " test-desc))))
+    (if (equal? test-status 'fail)
+      (println "    [FAIL]")
+      ;; Otherwise, the test passed.
+      (println "    [PASS]")))
 
   ;; We definitely want to know if any asserts failed.
   (if-let assert-status (kw 'assert-status)
     (if (equal? assert-status 'fail)
-      (if-let expected (kw 'expected)
-        (begin
-          (println "      Expected: " expected)
-          (if-let got (kw 'got)
-            (println "      Got: " got)
-            (println "      Got: (unavailable)")))
+      (if-let got (kw 'got)
+        (if-let expected (kw 'expected)
+          (begin
+            (println "      Expected: " expected)
+            (println "      Got: " got))
+          (if-let not-expected (kw 'not-expected)
+            (begin
+              (println "      Expected: not " not-expected)
+              (println "      Got: " got))))
         (println "      Assert failed: details unavailable")))))
 
 (define none stubf)

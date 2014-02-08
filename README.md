@@ -79,7 +79,8 @@ The test will now pass because we have 'cheated' to make it so:
 
 ```
   Suite: The sqr function
-    Test (passed): Should square 1 correctly
+    Test: Should square 1 correctly
+    [PASS]
 ```
 
 Now we extend the suite to another 'example':
@@ -105,10 +106,12 @@ always return `1`:
 
 ```
   Suite: The sqr function
-    Test (passed): Should square 1 correctly
+    Test: Should square 1 correctly
+    [PASS]
+    Test: Should square 2 correctly
       Expected: 4
       Got: 1
-    Test (failed): Should square 2 correctly
+    [FAIL]
 ```
 
 Now we fix that:
@@ -121,7 +124,9 @@ This time the test will pass because `sqr` handles the general case:
 
 ```
   Suite: The sqr function
-    Test (passed): Should square 1 correctly
-    Test (passed): Should square 2 correctly
+    Test: Should square 1 correctly
+    [PASS]
+    Test: Should square 2 correctly
+    [PASS]
 ```
 

@@ -93,8 +93,8 @@
       (setup 's
         ((suite "A test-internal suite"
           (tests
-            (test "A passing test" e #t)
-            (test "A failing test" e #f))
+            (test "A passing test" e ((e 'assert-equal) 1 1))
+            (test "A failing test" e ((e 'assert-equal) 0 1)))
           (options
             (option 'output-cb none))))))))
 
