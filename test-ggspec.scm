@@ -81,36 +81,27 @@
     (tests
       (test "Should have one pass and one fail"
         (lambda (e)
+          (define results (e 's))
           (and
-            ((e 'assert-equal) 1 (length (suite-passes ((e 's)))))
-            ((e 'assert-equal) 1 (length (suite-fails ((e 's))))))))
+            ((e 'assert-equal) 1 (car results))
+            ((e 'assert-equal) 1 (cadr results)))))
       (test "Should make its creation arguments available"
         (lambda (e)
           (define args (suite-args))
           (and
             ((e 'assert-equal) "A test-internal suite" (car args))
             ((e 'assert-equal) end (caddr args))
-            ((e 'assert-equal) end (list-ref args 4)))))
-      (test "Should name the passing test"
-        (lambda (e)
-          ((e 'assert-equal)
-            "A passing test"
-            (car (suite-passes ((e 's)))))))
-      (test "Should name the failing test"
-        (lambda (e)
-          ((e 'assert-equal)
-            "A failing test"
-            (car (suite-fails ((e 's))))))))
+            ((e 'assert-equal) end (list-ref args 4))))))
     (options)
     (setups
       (setup 's
         (lambda ()
-          (suite "A test-internal suite"
+          ((suite "A test-internal suite"
             (tests
               (test "A passing test" (lambda (e) #t))
               (test "A failing test" (lambda (e) #f)))
             (options
-              (option 'output-cb none))))))))
+              (option 'output-cb none)))))))))
 
 (test-kwalist)
 (test-assertions)

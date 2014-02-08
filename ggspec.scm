@@ -5,7 +5,6 @@
 (define-module (my ggspec)
   #:use-module (srfi srfi-1)
   #:use-module (srfi srfi-16)
-  #:use-module (ice-9 receive)
   #:export
     (
     end
@@ -188,15 +187,13 @@
 
 ;; Returns
 ;;   (lambda ()
-;;     (list desc pass-list fail-list)
+;;     (list num-passes num-fails)
 
-;;       pass-list: (list desc ...)
-;;       fail-list: (list desc ...)
+;;       num-passes: number: the number of passed tests.
+;;       num-fails: number: the number of failed tests.
 
-;;         desc: string: a description.
-
-;;   An uncalled procedure which, when called, will return the results
-;;   of running the test suite.
+;;   An uncalled procedure which, when called, will return the number of
+;;   passed and the number of failed tests.
 (define suite
   (case-lambda
     ((desc tsts opts sups tdowns)
@@ -233,12 +230,6 @@
               (cons
                 'assert-not-error
                 (lambda (x) (assert-not-error-to output-cb x)))))
-
-          ;; Intermediate result structure:
-          ;;
-          ;; (list
-          ;;   (cons 'pass desc) ...
-          ;;   (cons 'fail desc) ...)
           (intermediate-results
             (map
               (lambda (tst)
@@ -255,27 +246,18 @@
                   ((result ((caddr tst) env)))
                   ;; Run all the teardowns thunks:
                   (for-each (lambda (td) (td)) tdowns)
-                  (cons
-                    (if result
-                      (begin
-                        (output-cb
-                          #:test-desc test-desc
-                          #:test-status 'pass)
-                        'pass)
-                      (begin
-                        (output-cb
-                          #:test-desc test-desc
-                          #:test-status 'fail)
-                        'fail))
-                    test-desc)))
-              (or tsts end))))
+                  (output-cb
+                    #:test-desc test-desc
+                    #:test-status (if result 'pass 'fail))
+                  result))
+              (or tsts end)))
+          (num-tests
+            (length intermediate-results))
+          (num-passes
+            (length (filter identity intermediate-results))))
 
           (output-cb #:suite-status 'complete)
-          (receive (passes fails)
-            (partition
-              (lambda (result) (equal? 'pass (car result)))
-              intermediate-results)
-            (list desc (map cdr passes) (map cdr fails))))))
+          (list num-passes (- num-tests num-passes)))))
     ((desc tsts) (suite desc tsts end end end))
     ((desc tsts opts) (suite desc tsts opts end end))
     ((desc tsts opts sups) (suite desc tsts opts sups end))))
