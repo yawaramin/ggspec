@@ -19,13 +19,17 @@ run them; and _then_ the framework was written around the tests.
 Assuming you have cloned the `ggspec` repository to a directory also
 named `ggspec`, create a symbolic link to the `ggspec` directory inside
 any directory in your `$GUILE_LOAD_PATH` (Windows: `%GUILE_LOAD_PATH%`).
+Then, link or copy the `ggspec` script to any directory in your `$PATH`
+(Windows: `%PATH%`).
 
-E.g., if you have `~/guile` in your Guile load path, and have cloned the
-repo into `~/code/ggspec`, then run:
+E.g., if you have `~/guile` in your Guile load path, `~/bin` in your
+path, and have cloned the repo into `~/code/ggspec`, then run:
 
 ```
 cd ~/guile
 ln -s ~/code/ggspec
+cd ~/bin
+ln -s ~/code/ggspec/ggspec
 ```
 
 ## Verifying the framework itself
@@ -35,27 +39,28 @@ You can run the tests:
 
 ```
 cd ~/code/ggspec
-./ggspec .
+./ggspec # Or if you copied/linked the script to a dir in your path,
+         # just ggspec.
 ```
 
 ## Minimal complete example
 
 ```
 $ guile
-guile> (use-modules (my ggspec))
-guile> (define demo-suite (suite "Hello ggspec" end))
-guile> (demo-suite)
+guile> (use-modules (ggspec lib))
+guile> (suite "Hello ggspec" end)
   Suite: Hello ggspec
+
 (0 0)
 ```
 
 The last line above shows the number of passing tests and the number of
-failing tests. Since we didn't write _any_ tests here, but are zero.
+failing tests. Since we didn't write _any_ tests here, both are zero.
 
 ## Introduction
 
-See the `ggspec.scm` file for a detailed reference. A brief introduction
-to how it works:
+See the `lib.scm` file for a detailed reference. A brief introduction to
+how it works:
 
   - The `suite` function is presented as the way to organise everything.
     This includes tests, any options you want to pass in to those tests,
@@ -87,6 +92,10 @@ options, you have to specify options if you want to specify setups. You
 can specify empty options, setups, and teardowns, in which case the
 `suite` function doesn't try to do anything with them.
 
+Normally you will put all your test source code files in a subdirectory
+of your project directory called `spec`. This lets the `ggspec` test
+runner to find and run all of them.
+
 ## Tutorial
 
 A short tutorial (in the context of Test-Driven Development):
@@ -94,24 +103,26 @@ A short tutorial (in the context of Test-Driven Development):
 Suppose we want to develop a function `sqr` that should return the
 square of its argument (a number). In this example I will show the
 function and its test suite together, but usually you would have them in
-separate files.
+separate files. For this example you can follow along by making the
+changes in your editor and re-loading the source code file in your REPL:
+
+```
+guile> (load "test.scm")
+```
 
 First you write a failing test:
 
 ```scheme
-(use-modules (my ggspec))
+(use-modules (ggspec lib))
 
-(define sqr-suite ; Nothing significant about the name sqr-suite.
-  (suite "The sqr function"
-    (tests
-      (test "Should square 1 correctly"
-        ;; The 'e' argument below represents (and contains) all the
-        ;; state that we're passing in to the test. All setups, options,
-        ;; etc.
-        e
-        ((e 'assert-equal) 1 (sqr 1))))))
-
-(sqr-suite) ; Run the suite.
+(suite "The sqr function"
+  (tests
+    (test "Should square 1 correctly"
+      ;; The 'e' argument below represents (and contains) all the
+      ;; state that we're passing in to the test. All setups, options,
+      ;; etc.
+      e
+      ((e 'assert-equal) 1 (sqr 1)))))
 ```
 
 This suite will fail because the `sqr` function does not exist:
@@ -138,19 +149,16 @@ The test will now pass because we have 'cheated' to make it so:
 Now we extend the suite to another 'example':
 
 ```scheme
-(use-modules (my ggspec))
+(use-modules (ggspec lib))
 
-(define sqr-suite ; Nothing significant about the name sqr-suite.
-  (suite "The sqr function"
-    (tests
-      (test "Should square 1 correctly"
-        e
-        ((e 'assert-equal) 1 (sqr 1)))
-      (test "Should square 2 correctly"
-        e
-        ((e 'assert-equal) 4 (sqr 2))))))
-
-(sqr-suite)
+(suite "The sqr function"
+  (tests
+    (test "Should square 1 correctly"
+      e
+      ((e 'assert-equal) 1 (sqr 1)))
+    (test "Should square 2 correctly"
+      e
+      ((e 'assert-equal) 4 (sqr 2)))))
 ```
 
 This will now fail, again, because the `sqr` function is hard-coded to

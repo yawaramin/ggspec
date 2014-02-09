@@ -1,6 +1,8 @@
 #!/usr/bin/env guile
 !#
-(use-modules (ggspec lib))
+(use-modules
+  (ggspec lib)
+  (ice-9 ftw))
 
 (define (run-file fname)
   "Run all test suites found in the given file, and aggregate and return
@@ -8,7 +10,6 @@
 
   Arguments
     fname: string: the name of the file to look in for test suites.
-    Assumed to be in the current directory.
 
   Returns
     (list num-passes num-fails): same as in the suite function."
@@ -29,7 +30,45 @@
               (+ num-passes (car results))
               (+ num-fails (cadr results)))))))))
 
-(run-file "test-ggspec.scm")
+(define (run-tree dname)
+  "Run all test suites found in files in the given directory and all its
+  subdirectories, and aggregate and return the number of passed and
+  failed tests.
+
+  Arguments
+    dname: string: the name of the directory to look in for test suites.
+
+  Returns
+    (list num-passes num-fails): same as in the suite function."
+  (define passed 0)
+  (define failed 0)
+
+  (nftw
+    dname
+    (lambda (filename statinfo flag base level)
+      (define filename-length (string-length filename))
+
+      (if (equal? (substring filename (- filename-length 4)) ".scm")
+        (let ((file-results (run-file filename)))
+          (set! passed (+ passed (car file-results)))
+          (set! failed
+            (+ failed (cadr file-results)))))
+
+      #t))
+
+  (println
+    "Total "
+    (+ passed failed)
+    ", passed "
+    passed
+    ", failed "
+    failed
+    "."))
+
+(define (main)
+  (run-tree "spec"))
+
+(main)
 
 ; vim:set ft=scheme:
 
