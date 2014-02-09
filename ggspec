@@ -42,14 +42,22 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
         (num-passes 0)
         (num-fails 0))
 
-        (if (eof-object? form)
-          (list num-passes num-fails)
-          ;; Run the current test suite.
-          (let ((results (eval form (current-module))))
-            (loop
-              (read f)
-              (+ num-passes (car results))
-              (+ num-fails (cadr results)))))))))
+        (cond
+          ((eof-object? form)
+            (list num-passes num-fails))
+          ((equal? (car form) 'suite)
+            ;; Run the current test suite.
+            (let ((results (eval form (current-module))))
+              (loop
+                (read f)
+                (+ num-passes (car results))
+                (+ num-fails (cadr results)))))
+          (#t
+            ;; This is some form other than a suite definition.
+            (begin
+              (eval form (current-module))
+              ;; Go on to the next form, with results unchanged.
+              (loop (read f) num-passes num-fails))))))))
 
 (define (run-tree dname)
   "Run all test suites found in files in the given directory and all its

@@ -41,7 +41,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
     text-verbose
     text-normal
     none
-    suite-args
+    stub
     kwalist
     ))
 
