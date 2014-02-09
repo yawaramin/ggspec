@@ -187,58 +187,58 @@ Returns
   (syntax-rules ()
     ((_ expr) (catch #t (lambda () expr #f) (lambda _ #t)))))
 
-;; Declares a test suite.
+#!
+Declares a test suite.
 
-;; Arguments
-;;   desc: string: description of the suite.
+Arguments
+  desc: string: description of the suite.
 
-;;   tsts: (list tst ...): a collection of tests to run in this suite.
+  tsts: (list tst ...): a collection of tests to run in this suite.
 
-;;     tst: (list desc opts (lambda (e) expr))
+    tst: (list desc opts (lambda (e) expr))
 
-;;       desc: string: description of the test.
-;;       opts: same as above.
-;;       expr: the body of the test.
+      desc: string: description of the test.
+      opts: same as above.
+      expr: the body of the test.
 
-;;   opts: (list opt ...): a collection of options to pass into the
-;;   suite.
+  opts: (list opt ...): a collection of options to pass into the suite.
 
-;;     opt:
-;;       (list
-;;         (cons opt-name opt-val) ...)
+    opt:
+      (list
+        (cons opt-name opt-val) ...)
 
-;;       opt-name: symbol: the name of the option.
-;;       opt-val: any: the value being given to the option.
+      opt-name: symbol: the name of the option.
+      opt-val: any: the value being given to the option.
 
-;;   sups: (list sup ...): a collection of setup names and values to
-;;   pass into each test.
+  sups: (list sup ...): a collection of setup names and values to pass
+  into each test.
 
-;;     sup: (cons sup-name sup-val)
+    sup: (cons sup-name sup-val)
 
-;;       sup-name: symbol
-;;       sup-val: (lambda () expr)
+      sup-name: symbol
+      sup-val: (lambda () expr)
 
-;;         expr: any: the value to be given to the setup variable
-;;         during each test run. Will be re-evaluated each time a test
-;;         is run.
+        expr: any: the value to be given to the setup variable during
+        each test run. Will be re-evaluated each time a test is run.
 
-;;   tdowns: (list tdown ...): a collection of teardowns to run after
-;;   running each test.
+  tdowns: (list tdown ...): a collection of teardowns to run after
+  running each test.
 
-;;     tdown: (teardown (lambda () body ...))
+    tdown: (teardown (lambda () body ...))
 
-;;       body: the body expressions of the teardown.
+      body: the body expressions of the teardown.
 
-;; Side Effects
-;;   Outputs descriptive and diagnostic messages using the given runtime
-;;   message ('output-cb') function.
+Side Effects
+  Outputs descriptive and diagnostic messages using the given runtime
+  message ('output-cb') function.
 
-;; Returns
-;;   (list num-passes num-fails num-skips)
+Returns
+  (list num-passes num-fails)
 
-;;     num-passes: number: the number of passed tests.
-;;     num-fails: number: the number of failed tests.
-;;     num-skips number: the number of skipped tests.
+    num-passes: number: the number of passed tests.
+    num-fails: number: the number of failed tests.
+    num-skips number: the number of skipped tests.
+!#
 (define suite
   (case-lambda
     ((desc tsts opts sups tdowns)
@@ -347,14 +347,16 @@ Returns
 (define option cons)
 (define setups list)
 
-;; Declares a setup symbol-binding.
+#!
+Declares a setup symbol-binding.
 
-;; Arguments
-;;   sym: symbol: a symbol by which to refer to the bound value.
+Arguments
+  sym: symbol: a symbol by which to refer to the bound value.
 
-;;   expr: any: a value to bind to the symbol above. This value may
-;;   later be accessed from any test in the same suite by calling the
-;;   test's 'environment' (usually e) with the symbol. E.g., (e 'sym).
+  expr: any: a value to bind to the symbol above. This value may later
+  be accessed from any test in the same suite by calling the test's
+  'environment' (usually e) with the symbol. E.g., (e 'sym).
+!#
 (define-syntax setup
   (syntax-rules ()
     ((_ sym expr)
@@ -362,37 +364,38 @@ Returns
 
 (define tests list)
 
-;; Declares a test.
+#!
+Declares a test.
 
-;; Arguments
-;;   desc: string: a description of the test.
+Arguments
+  desc: string: a description of the test.
 
-;;   env: an 'environment' (an alist of names and bindings) that is
-;;   passed in to the test. Two types of names are defined:
+  env: an 'environment' (an alist of names and bindings) that is passed
+  in to the test. Two types of names are defined:
 
-;;     1. Names always automatically defined by ggspec before running
-;;     the test: 'assert-equal, 'assert-not-equal, etc. These are
-;;     defined by ggspec automatically because they depend on the suite
-;;     options like where to send test runtime messages to.
+    1. Names always automatically defined by ggspec before running the
+    test: 'assert-equal, 'assert-not-equal, etc. These are defined by
+    ggspec automatically because they depend on the suite options like
+    where to send test runtime messages to.
 
-;;     2. Names defined by the test writer by setting up names and
-;;     corresponding values in the suite setup section. The
-;;     corresponding values are evaluated anew each time a test is run,
-;;     which is why in the setup section you have to wrap each value up
-;;     inside a thunk.
+    2. Names defined by the test writer by setting up names and
+    corresponding values in the suite setup section. The corresponding
+    values are evaluated anew each time a test is run, which is why in
+    the setup section you have to wrap each value up inside a thunk.
 
-;;   expr: a value returned by one of the above assertion functions. An
-;;   expression that makes up the body of the test. This will be wrapped
-;;   inside a function and the function will be passed in the
-;;   'environment' env from above.
+  expr: a value returned by one of the above assertion functions. An
+  expression that makes up the body of the test. This will be wrapped
+  inside a function and the function will be passed in the 'environment'
+  env from above.
 
-;;   opts: same type as in 'suite', above. Optional (default is no
-;;   options).
+  opts: same type as in 'suite', above. Optional (default is no
+  options).
 
-;; Returns
-;;   (list desc opts func): a three-member list of the test description,
-;;   the options passed in to the test, and the unevaluated function
-;;   making up the body of the test.
+Returns
+  (list desc opts func): a three-member list of the test description,
+  the options passed in to the test, and the unevaluated function making
+  up the body of the test.
+!#
 (define-syntax test
   (syntax-rules ()
     ((_ desc env expr opts)
@@ -402,14 +405,15 @@ Returns
 
 (define teardowns list)
 
-;; Declares a teardown.
+#!
+Declares a teardown.
 
-;; Arguments
-;;   expr ...: any number of expressions.
+Arguments
+  expr ...: any number of expressions.
 
-;; Returns
-;;   A thunk containing all the expressions above, ready to be
-;;   evaluated.
+Returns
+  A thunk containing all the expressions above, ready to be evaluated.
+!#
 (define-syntax teardown
   (syntax-rules ()
     ((_ expr ...) (lambda () expr ...))))
