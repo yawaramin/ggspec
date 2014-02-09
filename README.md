@@ -23,9 +23,10 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 ## Introduction
 
-ggspec is a _very_ lightweight unit testing framework for Guile. I may
-port it to other Schemes in future; in principle it should be fairly
-simple because it doesn't use very many Guile-specific features.
+ggspec is a _very_ lightweight unit testing framework for Guile.
+Currently I am targeting Guile 1.8. I may port it to other Schemes in
+future; in principle it should be fairly simple because it doesn't use
+very many Guile-specific features.
 
 ggspec is self-testing. In fact, it was bootstrapped by the tests--the
 tests were written _first,_ before there was a unit testing framework to
@@ -84,34 +85,34 @@ how it works:
     any setup variables you want to define before running each test in
     the suite, and any teardowns you want to do after running each test.
 
-  - Inside the `suite` function, group of tests are organised together
+  - Inside the `suite` function, a group of tests is organised together
     using the `tests` function. Each test is created using the `test`
     macro.
 
-  - After the tests come the options, which are organised togerher using
+  - After the tests come the options, which are organised together using
     the `options` function. Each option is created using the `option`
     function.
 
   - After the options come the setups, which are organised together
     using the `setups` function. Each setup (which is a symbol name
-    bound to an expression) is created using the `setup` macro. Each
+    'bound' to an expression) is created using the `setup` macro. Each
     setup will be re-evaluated before each test is run. So generally you
     don't want to put expensive computations in these.
 
   - After the setups come the teardowns, which are organised together
     using the `teardowns` function. Each teardown (which is just a set
     of expressions) is created using the `teardown` macro. Each teardown
-    will be re-evluated _after_ each test is run to ensure a clean
+    will be re-evaluated _after_ each test is run to ensure a clean
     'environment' for the next test run.
 
 Options and setups are not required, but since setups come after
 options, you have to specify options if you want to specify setups. You
-can specify empty options, setups, and teardowns, in which case the
-`suite` function doesn't try to do anything with them.
+can specify empty (or missing) options, setups, and teardowns, in which
+case the `suite` function doesn't try to do anything with them.
 
 Normally you will put all your test source code files in a subdirectory
 of your project directory called `spec`. This lets the `ggspec` test
-runner to find and run all of them.
+runner find and run all of them.
 
 ## Tutorial
 
@@ -187,7 +188,7 @@ always return `1`:
     [PASS]
     Test: Should square 2 correctly
       Expected: 4
-      Got: 1
+           Got: 1
     [FAIL]
 ```
 

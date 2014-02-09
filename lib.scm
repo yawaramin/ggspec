@@ -345,11 +345,11 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
         (if-let expected (kw 'expected)
           (begin
             (println "      Expected: " expected)
-            (println "      Got: " got))
+            (println "           Got: " got))
           (if-let not-expected (kw 'not-expected)
             (begin
               (println "      Expected: not " not-expected)
-              (println "      Got: " got))))
+              (println "           Got: " got))))
         (println "      Assert failed: details unavailable"))))
 
   (if-let suite-status (kw 'suite-status)
