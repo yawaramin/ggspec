@@ -56,8 +56,6 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 (define kolour-green "\x1b[32m")
 (define kolour-normal "\x1b[0m")
 
-(use-syntax (ice-9 syncase))
-
 (define-syntax if-let
   (syntax-rules ()
     ((_ name val then-exp else-exp)

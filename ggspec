@@ -69,30 +69,26 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
   failed tests.
 
   Arguments
-    dname: string: the name of the directory to look in for test suites.
+    dname: string: the name of the directory to look in for test
+    suites."
+  (define (up-down-skip path stat result) result)
+  (file-system-fold
+    (stub #t)
+    (lambda (path stat result)
+      (define path-length (string-length path))
 
-  Returns
-    (list num-passes num-fails): same as in the suite function."
-  (define passed 0)
-  (define failed 0)
-  (define skipped 0)
-
-  (nftw
-    dname
-    (lambda (filename statinfo flag base level)
-      (define filename-length (string-length filename))
-
-      (if (equal? (substring filename (- filename-length 4)) ".scm")
-        (let ((file-results (run-file filename opts)))
-          (set! passed (+ passed (car file-results)))
-          (set! failed
-            (+ failed (cadr file-results)))
-          (set! skipped
-            (+ skipped (caddr file-results)))))
-
-      #t))
-
-  (list passed failed skipped))
+      (if (equal? (substring path (- path-length 4)) ".scm")
+        (let ((file-result (run-file path opts)))
+          (list
+            (+ (car result) (car file-result))
+            (+ (cadr result) (cadr file-result))
+            (+ (caddr result) (caddr file-result))))))
+    up-down-skip
+    up-down-skip
+    up-down-skip
+    (lambda (path stat errno result) result)
+    (list 0 0 0) ; Seed value of result: passes fails skips
+    dname))
 
 (define (main args)
   (define cmd-line-opts
