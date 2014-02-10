@@ -334,9 +334,9 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
   (if-let test-status (kw 'test-status)
     (if (equal? test-status 'fail)
-      (println "    [FAIL]")
+      (println "    \x1b[31m[FAIL]\x1b[0m")
       ;; Otherwise, the test passed.
-      (println "    [PASS]")))
+      (println "    \x1b[32m[PASS]\x1b[0m")))
 
   ;; We definitely want to know if any asserts failed.
   (if-let assert-status (kw 'assert-status)
