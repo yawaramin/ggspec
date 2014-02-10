@@ -61,6 +61,10 @@ cd ~/code/ggspec
          # just ggspec.
 ```
 
+## Contributing
+
+See the file `CONTRIBUTING.md`.
+
 ## Minimal complete example
 
 ```
