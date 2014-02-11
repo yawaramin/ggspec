@@ -90,7 +90,9 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
     (test
       "Should stop at or before stop argument value if any args not integers"
       e
-      (assert-equal (list 1.1 2.2 3.3) (range 1.1 4 1.1))))
+      (assert-equal (list 1.1 2.2 3.3) (range 1.1 4 1.1))
+      (options
+        (option 'skip #t))))
   (options
     (option 'colour #t)) ; Reminder to myself to fix the failing test.
   (setups

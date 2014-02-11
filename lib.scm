@@ -291,13 +291,32 @@ Returns
                   #:got got
                   (if flag #:expected #:not-expected) expected)
                 assert-status))
-            (or tsts end)
+            (or
+              (filter
+                (lambda (tst)
+                  ;; If a 'skip option is given in a test ...
+                  (if-let skip (assoc-ref (cadr tst) 'skip)
+                    ;; Skip this test if the 'skip option has a value #t
+                    (not skip)
+                    ;; If a 'skip option is not given, don't skip this
+                    ;; test
+                    #t))
+                tsts)
+              end)
             (range 1 (+ num-tests 1))))
         (num-passes
-          (length (filter identity intermediate-results))))
+          (length (filter identity intermediate-results)))
+        (num-fails
+          (length
+            (filter
+              (lambda (result) (not result))
+              intermediate-results))))
 
         (output-cb #:suite-status 'complete)
-        (list num-passes (- num-tests num-passes) 0)))
+        (list
+          num-passes
+          num-fails
+          (- num-tests num-passes num-fails))))
     ((desc tsts) (suite desc tsts end end end))
     ((desc tsts opts) (suite desc tsts opts end end))
     ((desc tsts opts sups) (suite desc tsts opts sups end))))

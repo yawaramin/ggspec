@@ -40,24 +40,26 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
       (let loop
         ((form (read f))
         (num-passes 0)
-        (num-fails 0))
+        (num-fails 0)
+        (num-skips 0))
 
         (cond
           ((eof-object? form)
-            (list num-passes num-fails))
+            (list num-passes num-fails num-skips))
           ((equal? (car form) 'suite)
             ;; Run the current test suite.
             (let ((results (eval form (current-module))))
               (loop
                 (read f)
                 (+ num-passes (car results))
-                (+ num-fails (cadr results)))))
+                (+ num-fails (cadr results))
+                (+ num-skips (caddr results)))))
           (#t
             ;; This is some form other than a suite definition.
             (begin
               (eval form (current-module))
               ;; Go on to the next form, with results unchanged.
-              (loop (read f) num-passes num-fails))))))))
+              (loop (read f) num-passes num-fails num-skips))))))))
 
 (define (run-tree dname)
   "Run all test suites found in files in the given directory and all its
@@ -71,6 +73,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
     (list num-passes num-fails): same as in the suite function."
   (define passed 0)
   (define failed 0)
+  (define skipped 0)
 
   (nftw
     dname
@@ -81,17 +84,21 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
         (let ((file-results (run-file filename)))
           (set! passed (+ passed (car file-results)))
           (set! failed
-            (+ failed (cadr file-results)))))
+            (+ failed (cadr file-results)))
+          (set! skipped
+            (+ skipped (caddr file-results)))))
 
       #t))
 
   (println
     "Total "
-    (+ passed failed)
+    (+ passed failed skipped)
     ", passed "
     passed
     ", failed "
     failed
+    ", skipped "
+    skipped
     "."))
 
 (define (main)
