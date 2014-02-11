@@ -91,7 +91,8 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
       "Should stop at or before stop argument value if any args not integers"
       e
       ((e 'assert-equal) (list 1.1 2.2 3.3) (range 1.1 4 1.1))))
-  (options)
+  (options
+    (option 'colour #t)) ; Reminder to myself to fix the failing test.
   (setups
     (setup 'l (list 0 1 2 3 4 5 6 7 8 9))))
 

@@ -207,9 +207,10 @@ Returns
   (case-lambda
     ((desc tsts opts sups tdowns)
       (define output-cb
-        (let ((v (assoc-ref opts 'output-cb))) (if v v text-normal)))
-      (output-cb #:suite-desc desc)
+        (if-let v (assoc-ref opts 'output-cb) v text-normal))
+      (define colour (if-let v (assoc-ref opts 'colour) v))
 
+      (output-cb #:suite-desc desc)
       (let*
         ((suite-bindings
           (list
@@ -244,7 +245,9 @@ Returns
                 ((result ((caddr tst) env)))
                 ;; Run all the teardowns thunks:
                 (for-each (lambda (td) (td)) tdowns)
-                (output-cb #:test-status (if result 'pass 'fail))
+                (output-cb
+                  #:colour colour
+                  #:test-status (if result 'pass 'fail))
                 result))
             (or tsts end)))
         (num-tests
@@ -360,6 +363,13 @@ Returns
   (define kws (kwalist kwargs))
   (define (kw sym) (assoc-ref kws sym))
 
+  (define colour-red
+    (if-let v (kw 'colour) "\x1b[31m" ""))
+  (define colour-green
+    (if (equal? colour-red "") "" "\x1b[32m"))
+  (define colour-normal
+    (if (equal? colour-red "") "" "\x1b[0m"))
+
   (if-let suite-desc (kw 'suite-desc)
     (println "  Suite: " suite-desc))
 
@@ -368,9 +378,9 @@ Returns
 
   (if-let test-status (kw 'test-status)
     (if (equal? test-status 'fail)
-      (println "    \x1b[31m[FAIL]\x1b[0m")
+      (println "    " colour-red "[FAIL]" colour-normal)
       ;; Otherwise, the test passed.
-      (println "    \x1b[32m[PASS]\x1b[0m")))
+      (println "    " colour-green "[PASS]" colour-normal)))
 
   ;; We definitely want to know if any asserts failed.
   (if-let assert-status (kw 'assert-status)
