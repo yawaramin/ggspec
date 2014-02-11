@@ -144,7 +144,7 @@ First you write a failing test:
       ;; state that we're passing in to the test. All setups, options,
       ;; etc.
       e
-      ((e 'assert-equal) 1 (sqr 1)))))
+      (assert-equal 1 (sqr 1)))))
 ```
 
 This suite will fail because the `sqr` function does not exist:
@@ -177,10 +177,10 @@ Now we extend the suite to another 'example':
   (tests
     (test "Should square 1 correctly"
       e
-      ((e 'assert-equal) 1 (sqr 1)))
+      (assert-equal 1 (sqr 1)))
     (test "Should square 2 correctly"
       e
-      ((e 'assert-equal) 4 (sqr 2)))))
+      (assert-equal 4 (sqr 2)))))
 ```
 
 This will now fail, again, because the `sqr` function is hard-coded to

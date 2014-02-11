@@ -26,6 +26,11 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
   #:use-module (srfi srfi-16)
   #:export
     (
+    assert-equal
+    assert-not-equal
+    assert-true
+    assert-false
+    assert-all
     end
     error?
     suite
@@ -105,48 +110,72 @@ Returns
 
 (define (println . args) (for-each display args) (newline))
 
-(define (assert-equal-to output-cb expected got)
-  "Checks that the expected value is equal to the received value. If
-  not, sends failure messages to the output callback function.
+(define (assert-equal expected got)
+  "Checks that the expected value is equal to the received value.
 
   Arguments
-  output-cb - proc that accepts any number of arguments: the output
-  callback function to send messages to.
+    expected: any: the expected value.
 
-  expected - any: the expected value.
-
-  got - any: the received value.
+    got: any: the received value.
 
   Returns:
-  #t if the expected and received values are equal. #f otherwise."
-  (if (equal? expected got)
-    (begin
-      (output-cb #:assert-status 'pass)
-      #t)
-    (begin
-      (output-cb #:expected expected #:got got #:assert-status 'fail)
-      #f)))
+    (list assert-status expected #f got): a list made up of the status
+    of the assertion and diagnostic details.
 
-(define (assert-not-equal-to output-cb not-expected got)
-  "Like assert-equal-to, but checks that the specified value is not
-  equal to the received value. If they are equal, sends failure messages
-  to the output callback function."
-  (if (equal? not-expected got)
-    (begin
-      (output-cb
-        #:not-expected not-expected
-        #:got got
-        #:assert-status 'fail)
-      #f)
-    (begin
-      (output-cb #:assert-status 'pass)
-      #t)))
+      assert-status: boolean: #t if the assert succeeded, #f otherwise.
 
-(define (assert-true-to output-cb x)
-  (assert-equal-to output-cb #t (if x #t #f)))
+      expected: any: the 'expected' value that was passed in to the
+      function.
 
-(define (assert-false-to output-cb x)
-  (assert-equal-to output-cb #f (if x #t #f)))
+      #f: this is a flag that indicates that the 'expected' value is
+      understood to be the actual expected value (see below).
+
+      got: any: the 'got' value that was passed in to the function."
+  (list (equal? expected got) expected #f got))
+
+(define (assert-not-equal not-expected got)
+  "Like assert-equal, but checks that the specified value is not equal
+  to the received value.
+
+  Arguments:
+    not-expected: any: the value not expected.
+
+    got: any: the received value.
+
+  Returns
+    Like 'assert-equal', but the third item in the list, the flag, is
+    set to #t to indicate that the 'expected' value being passed back
+    was actually _not_ expected."
+  (list (not (equal? not-expected got)) not-expected #t got))
+
+(define (assert-true x) (assert-equal #t (if x #t #f)))
+(define (assert-false x) (assert-equal #f (if x #t #f)))
+
+(define (assert-all . exprs)
+  "Asserts all of the given assertions (see above).
+
+  Arguments
+    exprs: a variable number of assertions created with one of the above
+    assertion functions.
+
+  Returns
+    A failure result from the first assertion that fails, if any; or a
+    success result."
+  (let loop
+    ((exprs exprs))
+
+    (if (null? exprs)
+      (list #t #t #f #t)
+      (let*
+        ((first-expr (car exprs))
+        (assert-status (car first-expr))
+        (expected (cadr first-expr))
+        (flag (caddr first-expr))
+        (got (cadddr first-expr)))
+
+        (if (not assert-status)
+          (list #f expected flag got)
+          (loop (cdr exprs)))))))
 
 (define-syntax error?
   (syntax-rules ()
@@ -195,42 +224,45 @@ Returns
 ;;       body: the body expressions of the teardown.
 
 ;; Side Effects
-;;   Records all passed-in arguments as meta-information inside the
-;;   suite procedure, in the property named 'args.
+;;   Outputs descriptive and diagnostic messages using the given runtime
+;;   message ('output-cb') function.
 
 ;; Returns
-;;   (list num-passes num-fails)
+;;   (list num-passes num-fails num-skips)
 
 ;;     num-passes: number: the number of passed tests.
 ;;     num-fails: number: the number of failed tests.
+;;     num-skips number: the number of skipped tests.
 (define suite
   (case-lambda
     ((desc tsts opts sups tdowns)
       (define output-cb
         (if-let v (assoc-ref opts 'output-cb) v text-normal))
       (define colour (if-let v (assoc-ref opts 'colour) v))
+      (define num-tests (length tsts))
 
       (output-cb #:suite-desc desc)
+      (output-cb #:num-tests num-tests)
       (let*
         ((suite-bindings
           (list
             (cons
               'assert-equal
               (lambda (expected got)
-                (assert-equal-to output-cb expected got)))
+                (assert-equal expected got)))
             (cons
               'assert-not-equal
               (lambda (expected got)
-                (assert-not-equal-to output-cb expected got)))
+                (assert-not-equal expected got)))
             (cons
               'assert-true
-              (lambda (x) (assert-true-to output-cb x)))
+              (lambda (x) (assert-true x)))
             (cons
               'assert-false
-              (lambda (x) (assert-false-to output-cb x)))))
+              (lambda (x) (assert-false x)))))
         (intermediate-results
           (map
-            (lambda (tst)
+            (lambda (tst tst-num)
               (define test-desc (car tst))
               (define test-bindings
                 (append
@@ -239,24 +271,33 @@ Returns
                     (lambda (sup) (cons (car sup) ((cdr sup))))
                     (or sups end))))
               (define (env name) (assoc-ref test-bindings name))
-              (output-cb #:test-desc test-desc)
-              (let
+
+              (let*
                 ;; Run the test's function:
-                ((result ((caddr tst) env)))
+                ((result ((caddr tst) env))
+                ;; Extract parts of each result:
+                (assert-status (car result))
+                (expected (cadr result))
+                (flag (caddr result))
+                (got (cadddr result)))
+
                 ;; Run all the teardowns thunks:
                 (for-each (lambda (td) (td)) tdowns)
                 (output-cb
                   #:colour colour
-                  #:test-status (if result 'pass 'fail))
-                result))
-            (or tsts end)))
-        (num-tests
-          (length intermediate-results))
+                  #:test-num tst-num
+                  #:test-desc test-desc
+                  #:assert-status assert-status
+                  #:got got
+                  (if flag #:expected #:not-expected) expected)
+                assert-status))
+            (or tsts end)
+            (range 1 (+ num-tests 1))))
         (num-passes
           (length (filter identity intermediate-results))))
 
         (output-cb #:suite-status 'complete)
-        (list num-passes (- num-tests num-passes))))
+        (list num-passes (- num-tests num-passes) 0)))
     ((desc tsts) (suite desc tsts end end end))
     ((desc tsts opts) (suite desc tsts opts end end))
     ((desc tsts opts sups) (suite desc tsts opts sups end))))
@@ -299,9 +340,12 @@ Returns
 ;;     which is why in the setup section you have to wrap each value up
 ;;     inside a thunk.
 
-;;   expr ...: a variable number of expressions that make up the body of
-;;   the test. These will be wrapped inside a function and the function
-;;   will be passed in the 'environment' env from above.
+;;     expr: a value returned by one of the above assertion functions.
+;;     An expression that makes up the body of the test. This will be
+;;     wrapped inside a function and the function will be passed in the
+;;     'environment' env from above.
+
+;;   opts: same type as in 'suite', above.
 
 ;; Returns
 ;;   (list desc opts func): a three-member list of the test description,
@@ -309,8 +353,10 @@ Returns
 ;;   making up the body of the test.
 (define-syntax test
   (syntax-rules ()
-    ((_ desc env expr ...)
-      (list desc end (lambda (env) expr ...)))))
+    ((_ desc env expr opts)
+      (list desc opts (lambda (env) expr)))
+    ((_ desc env expr)
+      (test desc env expr end))))
 
 (define teardowns list)
 
