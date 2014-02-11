@@ -72,6 +72,29 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
     (setup 'l3 (list #:a 1 #:b 2 #:c 3))
     (setup 'l4 (list #:a 1 #:b 2 #:c 3 #:d 4))))
 
+(suite "The range function"
+  (tests
+    (test "Should return an empty list if start greater than stop"
+      e
+      ((e 'assert-equal) end (range 1.1 1)))
+    (test "Should return exactly the specified range"
+      e
+      ((e 'assert-equal) (e 'l) (range 0 10 1)))
+    (test "Should by default return a range incremented by 1"
+      e
+      ((e 'assert-equal) (e 'l) (range 0 10)))
+    (test
+      "Should by default return a range starting at 0 and incremented by 1"
+      e
+      ((e 'assert-equal) (e 'l) (range 10)))
+    (test
+      "Should stop at or before stop argument value if any args not integers"
+      e
+      ((e 'assert-equal) (list 1.1 2.2 3.3) (range 1.1 4 1.1))))
+  (options)
+  (setups
+    (setup 'l (list 0 1 2 3 4 5 6 7 8 9))))
+
 (suite "ggspec assertion functions"
   (tests
     (test "Should assert equality"
