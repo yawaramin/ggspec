@@ -119,10 +119,10 @@ Returns
     got: any: the received value.
 
   Returns:
-    (list assert-status expected #f got): a list made up of the status
+    (list test-status expected #f got): a list made up of the status
     of the assertion and diagnostic details.
 
-      assert-status: boolean: #t if the assert succeeded, #f otherwise.
+      test-status: boolean: #t if the assert succeeded, #f otherwise.
 
       expected: any: the 'expected' value that was passed in to the
       function.
@@ -152,7 +152,8 @@ Returns
 (define (assert-false x) (assert-equal #f (if x #t #f)))
 
 (define (assert-all . exprs)
-  "Asserts all of the given assertions (see above).
+  "Asserts all of the given assertions (see above). In other words,
+  composes a set of assertions together into a single 'super-assertion'.
 
   Arguments
     exprs: a variable number of assertions created with one of the above
@@ -168,12 +169,12 @@ Returns
       (list #t #t #f #t)
       (let*
         ((first-expr (car exprs))
-        (assert-status (car first-expr))
+        (test-status (car first-expr))
         (expected (cadr first-expr))
         (flag (caddr first-expr))
         (got (cadddr first-expr)))
 
-        (if (not assert-status)
+        (if (not test-status)
           (list #f expected flag got)
           (loop (cdr exprs)))))))
 
@@ -239,84 +240,99 @@ Returns
       (define output-cb
         (if-let v (assoc-ref opts 'output-cb) v text-normal))
       (define colour (if-let v (assoc-ref opts 'colour) v))
-      (define num-tests (length tsts))
+      (define skip (if-let v (assoc-ref opts 'skip) v))
 
       (output-cb #:suite-desc desc)
-      (output-cb #:num-tests num-tests)
-      (let*
-        ((suite-bindings
-          (list
-            (cons
-              'assert-equal
-              (lambda (expected got)
-                (assert-equal expected got)))
-            (cons
-              'assert-not-equal
-              (lambda (expected got)
-                (assert-not-equal expected got)))
-            (cons
-              'assert-true
-              (lambda (x) (assert-true x)))
-            (cons
-              'assert-false
-              (lambda (x) (assert-false x)))))
-        (intermediate-results
-          (map
-            (lambda (tst tst-num)
-              (define test-desc (car tst))
-              (define test-bindings
-                (append
-                  suite-bindings
-                  (map
-                    (lambda (sup) (cons (car sup) ((cdr sup))))
-                    (or sups end))))
-              (define (env name) (assoc-ref test-bindings name))
-
-              (let*
-                ;; Run the test's function:
-                ((result ((caddr tst) env))
-                ;; Extract parts of each result:
-                (assert-status (car result))
-                (expected (cadr result))
-                (flag (caddr result))
-                (got (cadddr result)))
-
-                ;; Run all the teardowns thunks:
-                (for-each (lambda (td) (td)) tdowns)
-                (output-cb
-                  #:colour colour
-                  #:test-num tst-num
-                  #:test-desc test-desc
-                  #:assert-status assert-status
-                  #:got got
-                  (if flag #:expected #:not-expected) expected)
-                assert-status))
-            (or
-              (filter
+      (if skip
+        ;; Skip all tests in this suite.
+        (begin
+          (for-each
+            (lambda (tst)
+              (output-cb #:test-desc (car tst) #:test-status 'skip))
+            tsts)
+          (list 0 0 (length tsts)))
+        (begin
+          (let*
+            ((suite-bindings
+              (list
+                #!
+                These assertion functions are now deprecated in favour
+                of the plain, pure assertion functions above.
+                !#
+                (cons
+                  'assert-equal
+                  (lambda (expected got)
+                    (assert-equal expected got)))
+                (cons
+                  'assert-not-equal
+                  (lambda (expected got)
+                    (assert-not-equal expected got)))
+                (cons
+                  'assert-true
+                  (lambda (x) (assert-true x)))
+                (cons
+                  'assert-false
+                  (lambda (x) (assert-false x)))))
+            (intermediate-results
+              (map
                 (lambda (tst)
-                  ;; If a 'skip option is given in a test ...
-                  (if-let skip (assoc-ref (cadr tst) 'skip)
-                    ;; Skip this test if the 'skip option has a value #t
-                    (not skip)
-                    ;; If a 'skip option is not given, don't skip this
-                    ;; test
-                    #t))
-                tsts)
-              end)
-            (range 1 (+ num-tests 1))))
-        (num-passes
-          (length (filter identity intermediate-results)))
-        (num-fails
-          (length
-            (filter
-              (lambda (result) (not result))
-              intermediate-results))))
+                  (define test-desc (car tst))
+                  (define test-bindings
+                    (append
+                      suite-bindings
+                      (map
+                        (lambda (sup) (cons (car sup) ((cdr sup))))
+                        (or sups end))))
+                  (define (env name) (assoc-ref test-bindings name))
 
-        (output-cb #:suite-status 'complete)
-        (list
-          num-passes
-          num-fails
-          (- num-tests num-passes num-fails))))
+                  (let*
+                    ;; Run the test's function:
+                    ((result ((caddr tst) env))
+                    ;; Extract parts of each result:
+                    (test-status (car result))
+                    (expected (cadr result))
+                    (flag (caddr result))
+                    (got (cadddr result)))
+
+                    ;; Run all the teardowns thunks:
+                    (for-each (lambda (td) (td)) tdowns)
+                    ;; Output diagnostics:
+                    (output-cb
+                      #:colour colour
+                      #:test-desc test-desc
+                      #:test-status (if test-status 'pass 'fail)
+                      #:got got
+                      (if flag #:not-expected #:expected) expected)
+                    test-status))
+                (or
+                  (filter
+                    (lambda (tst)
+                      ;; If a 'skip option is given in a test ...
+                      (if-let skip (assoc-ref (cadr tst) 'skip)
+                        ;; Skip this test if the 'skip option has a value #t
+                        (begin
+                          (output-cb
+                            #:test-desc (car tst)
+                            #:test-status 'skip)
+                          (not skip))
+                        ;; If a 'skip option is not given, don't skip this
+                        ;; test
+                        #t))
+                    tsts)
+                  end)))
+            (num-passes
+              (length (filter identity intermediate-results)))
+            (num-fails
+              (length
+                (filter
+                  (lambda (result) (not result))
+                  intermediate-results))))
+
+            (output-cb #:suite-status 'complete)
+            (list
+              num-passes
+              num-fails
+              (- (length tsts) num-passes num-fails))))))
     ((desc tsts) (suite desc tsts end end end))
     ((desc tsts opts) (suite desc tsts opts end end))
     ((desc tsts opts sups) (suite desc tsts opts sups end))))
@@ -359,12 +375,13 @@ Returns
 ;;     which is why in the setup section you have to wrap each value up
 ;;     inside a thunk.
 
-;;     expr: a value returned by one of the above assertion functions.
-;;     An expression that makes up the body of the test. This will be
-;;     wrapped inside a function and the function will be passed in the
-;;     'environment' env from above.
+;;   expr: a value returned by one of the above assertion functions. An
+;;   expression that makes up the body of the test. This will be wrapped
+;;   inside a function and the function will be passed in the
+;;   'environment' env from above.
 
-;;   opts: same type as in 'suite', above.
+;;   opts: same type as in 'suite', above. Optional (default is no
+;;   options).
 
 ;; Returns
 ;;   (list desc opts func): a three-member list of the test description,
@@ -421,7 +438,7 @@ Returns
   (when-then-print 'expected "      Expected: ")
   (when-then-print 'not-expected "      Not expected: ")
   (when-then-print 'got "      Got: ")
-  (when-then-print 'assert-status "      Assert ")
+  (when-then-print 'test-status "      Assert ")
   (when-then-print 'test-status "    Test "))
 
 (define (text-normal . kwargs)
@@ -448,8 +465,8 @@ Returns
       (println "    " colour-green "[PASS]" colour-normal)))
 
   ;; We definitely want to know if any asserts failed.
-  (if-let assert-status (kw 'assert-status)
-    (if (equal? assert-status 'fail)
+  (if-let test-status (kw 'test-status)
+    (if (equal? test-status 'fail)
       (if-let got (kw 'got)
         (if-let expected (kw 'expected)
           (begin
