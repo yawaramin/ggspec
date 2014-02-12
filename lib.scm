@@ -250,6 +250,7 @@ Returns
             (lambda (tst)
               (output-cb #:test-desc (car tst) #:test-status 'skip))
             tsts)
+          (output-cb #:suite-status 'complete)
           (list 0 0 (length tsts)))
         (begin
           (let*
