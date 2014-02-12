@@ -45,7 +45,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
     teardowns
     teardown
     text-verbose
-    text-normal
+    output-normal
     none
     stub
     kwalist
@@ -238,7 +238,7 @@ Returns
   (case-lambda
     ((desc tsts opts sups tdowns)
       (define output-cb
-        (if-let v (assoc-ref opts 'output-cb) v text-normal))
+        (if-let v (assoc-ref opts 'output-cb) v output-normal))
       (define colour (if-let v (assoc-ref opts 'colour) v))
       (define skip (if-let v (assoc-ref opts 'skip) v))
 
@@ -441,8 +441,24 @@ Returns
   (when-then-print 'test-status "      Assert ")
   (when-then-print 'test-status "    Test "))
 
-(define (text-normal . kwargs)
+#!
+Varieties of calls to the 'output-cb' function(s)
+
+#:suite-desc desc
+
+#:test-desc desc #:test-status 'skip
+
+#:colour colour
+#:test-desc test-desc
+#:test-status ('pass OR 'fail OR 'skip)
+#:got got
+(#:not-expected OR #:expected) expected
+
+#:suite-status 'complete
+!#
+(define (output-normal . kwargs)
   (define kws (kwalist kwargs))
+  ;; We'll use this helper function to access the keyword arguments.
   (define (kw sym) (assoc-ref kws sym))
 
   (define colour-red
@@ -452,34 +468,29 @@ Returns
   (define colour-normal
     (if (equal? colour-red "") "" "\x1b[0m"))
 
-  (if-let suite-desc (kw 'suite-desc)
-    (println "  Suite: " suite-desc))
-
-  (if-let test-desc (kw 'test-desc)
-    (println "    Test: " test-desc))
+  (if-let suite-desc (kw 'suite-desc) (println "  Suite: " suite-desc))
+  (if-let suite-status (kw 'suite-status) (newline))
 
   (if-let test-status (kw 'test-status)
-    (if (equal? test-status 'fail)
-      (println "    " colour-red "[FAIL]" colour-normal)
-      ;; Otherwise, the test passed.
-      (println "    " colour-green "[PASS]" colour-normal)))
-
-  ;; We definitely want to know if any asserts failed.
-  (if-let test-status (kw 'test-status)
-    (if (equal? test-status 'fail)
-      (if-let got (kw 'got)
-        (if-let expected (kw 'expected)
-          (begin
-            (println "      Expected: " expected)
-            (println "           Got: " got))
-          (if-let not-expected (kw 'not-expected)
+    (if-let test-desc (kw 'test-desc)
+      (cond
+        ((equal? test-status 'pass)
+          (println "    " colour-green "[PASS]" colour-normal))
+        ((equal? test-status 'skip)
+          (println "    [SKIP] " test-desc))
+        (#t ; The test failed:
+          (if-let got (kw 'got)
             (begin
-              (println "      Expected: not " not-expected)
-              (println "           Got: " got))))
-        (println "      Assert failed: details unavailable"))))
-
-  (if-let suite-status (kw 'suite-status)
-    (newline)))
+              (println "    " colour-red "[FAIL] " colour-normal test-desc)
+              (if-let expected (kw 'expected)
+                (begin
+                  (println "      Expected: " expected)
+                  (println "           Got: " got))
+                (if-let not-expected (kw 'not-expected)
+                  (begin
+                    (println "      Expected: not " expected)
+                    (println "           Got: " got)))))
+            (println "      Test failed: details unavailable")))))))
 
 (define none stubf)
 
