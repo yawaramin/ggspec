@@ -164,11 +164,11 @@ The test will now pass because we have 'cheated' to make it so:
 
 ```
   Suite: The sqr function
-    Test: Should square 1 correctly
     [PASS]
 ```
 
-Now we extend the suite to another 'example':
+Note that the output is minimal when a test passes. Now we extend the
+suite to another 'example':
 
 ```scheme
 (use-modules (ggspec lib))
@@ -188,12 +188,10 @@ always return `1`:
 
 ```
   Suite: The sqr function
-    Test: Should square 1 correctly
     [PASS]
-    Test: Should square 2 correctly
+    [FAIL] Should square 2 correctly
       Expected: 4
            Got: 1
-    [FAIL]
 ```
 
 Now we fix that:
@@ -206,9 +204,7 @@ This time the test will pass because `sqr` handles the general case:
 
 ```
   Suite: The sqr function
-    Test: Should square 1 correctly
     [PASS]
-    Test: Should square 2 correctly
     [PASS]
 ```
 
