@@ -494,7 +494,7 @@ Varieties of calls to the 'output-cb' function(s)
                   (println "           Got: " got))
                 (if-let not-expected (kw 'not-expected)
                   (begin
-                    (println "      Expected: not " expected)
+                    (println "      Expected: not " not-expected)
                     (println "           Got: " got)))))
             (println "      Test failed: details unavailable")))))))
 
