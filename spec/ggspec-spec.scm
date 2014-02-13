@@ -122,8 +122,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
         (assert-all
           (assert-equal 1 (car results))
           (assert-equal 1 (cadr results))
-          (assert-equal 1 (caddr results))
-          ))))
+          (assert-equal 1 (caddr results))))))
   (options)
   (setups
     (setup 's
@@ -138,4 +137,38 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
               (option 'skip #t))))
         (options
           (option 'output-cb none))))))
+
+(suite "The output-normal function"
+  (tests
+    (test "Should display all diagnostics correctly"
+      e
+      (assert-equal
+        (e 'output)
+        (with-output-to-string (e 'suite-thunk)))))
+  (options)
+  (setups
+    (setup 'output
+      (string-append
+        "  Suite: internal\n"
+        "    [PASS]\n"
+        "    [FAIL] 1 should equal 2\n"
+        "      Expected: 2\n"
+        "           Got: 1\n"
+        "    [FAIL] #t should be #f\n"
+        "      Expected: #f\n"
+        "           Got: #t\n"
+        "    [FAIL] 1/0 should not be an error\n"
+        "      Expected: #f\n"
+        "           Got: #t\n"
+        "\n"))
+    (setup 'suite-thunk
+      (lambda ()
+        (suite "internal"
+          (tests
+            (test "This should pass" e (assert-equal 1 1))
+            (test "1 should equal 2" e (assert-equal 2 1))
+            (test "#t should be #f" e (assert-false #t))
+            (test "1/0 should not be an error"
+              e
+              (assert-false (error? (/ 1 0))))))))))
 
