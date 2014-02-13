@@ -19,3 +19,20 @@ pull the latest commits, `guile-2` will point at some other commit but
 you will be working with your own history in your own branch and will be
 able to easily rebase onto the new `guile-2`.
 
+## Branches
+
+With that out of the way here's a description of the branches that I'm
+using currently:
+
+  - `master`: a ready-to-ship version of ggspec, targetting Guile 1.8.
+
+  - `guile-2`: a ready-to-ship version of ggspec, targetting Guile 2. As
+    I explain above, this is a floating head; don't rely on it to
+    preserve SHA history. When I stop supporting Guile 1.8 and start
+    targetting Guile 2 by default, this branch will be merged in to
+    `master`.
+
+  - `devel`: a work-in-progress branch that will periodically be merged
+    back in to `master`. This branch exists to serve as a backup of the
+    work on my computer; use at your own discretion.
+
