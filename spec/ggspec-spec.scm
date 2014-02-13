@@ -184,23 +184,32 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
     (setup 'output
       (string-append
         "# Suite: internal\n"
+        "ok - This should be skipped # SKIP\n"
         "ok - This should pass\n"
         "not ok - 1 should equal 2\n"
         "# Expected: 2\n"
+        "#      Got: 1\n"
+        "not ok - 1 should not equal 1\n"
+        "# Expected: not 1\n"
         "#      Got: 1\n"
         "not ok - true should be false\n"
         "# Expected: false\n"
         "#      Got: true\n"
         "not ok - 1/0 should not be an error\n"
         "# Expected: false\n"
-        "#      Got: true\n"
-        "#"))
+        "#      Got: true\n"))
     (setup 'suite-thunk
       (lambda ()
         (suite "internal"
           (tests
             (test "This should pass" e (assert-equal 1 1))
+            (test "This should be skipped"
+              e
+              (assert-equal 2 1)
+              (options
+                (option 'skip #t)))
             (test "1 should equal 2" e (assert-equal 2 1))
+            (test "1 should not equal 1" e (assert-not-equal 1 1))
             (test "true should be false" e (assert-false #t))
             (test "1/0 should not be an error"
               e

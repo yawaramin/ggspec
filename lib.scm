@@ -52,6 +52,10 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
     kwalist
     ))
 
+(define kolour-red "\x1b[31m")
+(define kolour-green "\x1b[32m")
+(define kolour-normal "\x1b[0m")
+
 (use-syntax (ice-9 syncase))
 
 (define-syntax if-let
@@ -464,11 +468,11 @@ Varieties of calls to the 'output-cb' function(s)
   (define (kw sym) (assoc-ref kws sym))
 
   (define colour-red
-    (if-let v (kw 'colour) "\x1b[31m" ""))
+    (if-let v (kw 'colour) kolour-red ""))
   (define colour-green
-    (if (equal? colour-red "") "" "\x1b[32m"))
+    (if (equal? colour-red "") "" kolour-green))
   (define colour-normal
-    (if (equal? colour-red "") "" "\x1b[0m"))
+    (if (equal? colour-red "") "" kolour-normal))
 
   (if-let suite-desc (kw 'suite-desc) (println "  Suite: " suite-desc))
   (if-let suite-status (kw 'suite-status) (newline))
@@ -494,6 +498,60 @@ Varieties of calls to the 'output-cb' function(s)
                     (println "           Got: " got)))))
             (println "      Test failed: details unavailable")))))))
 
-(define output-tap stubf)
+(define (output-tap . kwargs)
+  "Output suite and test results in TAP format.
+
+  Arguments
+    See varieties of keyword arguments above.
+
+  Side Effects
+    Outputs to the current standard output port test results in (a
+    subset of) TAP format. Does not output the 'plan' (the total number
+    of tests run)--that job should be done by the 'ggspec' script."
+  (define kws (kwalist kwargs))
+  ;; We'll use this helper function to access the keyword arguments.
+  (define (kw sym) (assoc-ref kws sym))
+
+  (define colour-red
+    (if-let v (kw 'colour) kolour-red ""))
+  (define colour-green
+    (if (equal? colour-red "") "" kolour-green))
+  (define colour-normal
+    (if (equal? colour-red "") "" kolour-normal))
+
+  (if-let suite-desc (kw 'suite-desc) (println "# Suite: " suite-desc))
+
+  (if-let test-status (kw 'test-status)
+    (if-let test-desc (kw 'test-desc)
+      (cond
+        ((equal? test-status 'pass)
+          (println colour-green "ok" colour-normal " - " test-desc))
+        ((equal? test-status 'skip)
+          (println
+            colour-green
+            "ok"
+            colour-normal
+            " - "
+            test-desc
+            " # SKIP"))
+        (#t ; The test failed:
+          (if-let got (kw 'got)
+            (begin
+              (println
+                colour-red
+                "not ok"
+                colour-normal
+                " - "
+                test-desc)
+              (if-let expected (kw 'expected)
+                (begin
+                  (println "# Expected: " expected)
+                  (println "#      Got: " got))
+                (if-let not-expected (kw 'not-expected)
+                  (begin
+                    (println "# Expected: not " not-expected)
+                    (println "#      Got: " got)))))
+            (println "# Test failed: details unavailable")))))))
+
 (define none stubf)
 
