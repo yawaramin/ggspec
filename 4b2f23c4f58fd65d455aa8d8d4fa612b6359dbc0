@@ -1,0 +1,8 @@
+One thing I discovered while writing this code is that right now if
+there are any tests in the suite flagged as skipped, the output for
+those gets displayed _first,_ before the output for the rest of the
+tests--no matter what order they are defined in in the test source file.
+This doesn't impact you if the order of your tests doesn't matter to
+you--and order shouldn't matter to you because our philosophy is that
+tests should be isolated from each other. But it is relevant when
+testing the output of the runtime message functions.
