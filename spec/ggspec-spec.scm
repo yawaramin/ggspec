@@ -115,20 +115,27 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 (suite "A ggspec example suite"
   (tests
-    (test "Should have one pass and one fail"
+    (test "Should have one each of passes, fails, and skips"
       e
       (begin
         (define results (e 's))
         (assert-all
           (assert-equal 1 (car results))
-          (assert-equal 1 (cadr results))))))
+          (assert-equal 1 (cadr results))
+          (assert-equal 1 (caddr results))
+          ))))
   (options)
   (setups
     (setup 's
       (suite "A test-internal suite"
         (tests
           (test "A passing test" e (assert-equal 1 1))
-          (test "A failing test" e (assert-equal 0 1)))
+          (test "A failing test" e (assert-equal 0 1))
+          (test "A skipped test"
+            e
+            (assert-equal 0 1)
+            (options
+              (option 'skip #t))))
         (options
           (option 'output-cb none))))))
 
