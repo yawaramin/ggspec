@@ -148,8 +148,8 @@ Returns
     was actually _not_ expected."
   (list (not (equal? not-expected got)) not-expected #t got))
 
-(define (assert-true x) (assert-equal #t (if x #t #f)))
-(define (assert-false x) (assert-equal #f (if x #t #f)))
+(define (assert-true x) (assert-equal 'true (if x 'true 'false)))
+(define (assert-false x) (assert-equal 'false (if x 'true 'false)))
 
 (define (assert-all . exprs)
   "Asserts all of the given assertions (see above). In other words,

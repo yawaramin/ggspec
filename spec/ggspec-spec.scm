@@ -154,12 +154,12 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
         "    [FAIL] 1 should equal 2\n"
         "      Expected: 2\n"
         "           Got: 1\n"
-        "    [FAIL] #t should be #f\n"
-        "      Expected: #f\n"
-        "           Got: #t\n"
+        "    [FAIL] true should be false\n"
+        "      Expected: false\n"
+        "           Got: true\n"
         "    [FAIL] 1/0 should not be an error\n"
-        "      Expected: #f\n"
-        "           Got: #t\n"
+        "      Expected: false\n"
+        "           Got: true\n"
         "\n"))
     (setup 'suite-thunk
       (lambda ()
@@ -167,7 +167,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
           (tests
             (test "This should pass" e (assert-equal 1 1))
             (test "1 should equal 2" e (assert-equal 2 1))
-            (test "#t should be #f" e (assert-false #t))
+            (test "true should be false" e (assert-false #t))
             (test "1/0 should not be an error"
               e
               (assert-false (error? (/ 1 0))))))))))
