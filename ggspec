@@ -117,7 +117,8 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
     ((equal? output-cb "tap")
       (println "1.." total))
     (#t
-      (error "I don't understand how you want the test results formatted."))))
+      (error
+        "I don't understand how you want the test results formatted."))))
 
 ;; vim:set ft=scheme:
 
