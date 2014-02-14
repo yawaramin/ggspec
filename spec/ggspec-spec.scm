@@ -136,7 +136,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
             (options
               (option 'skip #t))))
         (options
-          (option 'output-cb none))))))
+          (option 'output-cb output-none))))))
 
 (suite "The output-normal function"
   (tests

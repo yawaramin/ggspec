@@ -45,9 +45,9 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
     teardowns
     teardown
     text-verbose
+    output-none
     output-normal
     output-tap
-    none
     stub
     kwalist
     ))
@@ -555,5 +555,5 @@ Varieties of calls to the 'output-cb' function(s)
                     (println "#      Got: " got)))))
             (println "# Test failed: details unavailable")))))))
 
-(define none stubf)
+(define output-none stubf)
 

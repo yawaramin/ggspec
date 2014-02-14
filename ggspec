@@ -23,9 +23,45 @@ IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 !#
 (use-modules
+  (srfi srfi-1)
   (ggspec lib)
   (ice-9 ftw)
-  (ice-9 getopt-long))
+  (ice-9 getopt-long)
+  (ice-9 match))
+
+(define (suite-add-option opt s)
+  "Add an option to the read, unevaluated form of a suite.
+
+  Arguments
+    opt: '(option k v)
+
+      k: symbol: name of the option.
+      v: any; value of the option.
+
+    s: form: a read, unevaluated 'suite' form:
+
+      (suite desc tsts opts sups tdowns)
+
+  Returns
+    A read, unevaluated suite with the option added."
+  (define (opts-add-opt os o)
+    (cons 'options (cons o (cdr os))))
+
+  #!
+  Below, variable names have the following meanings:
+
+  d: suite description
+  ts: a list of tests
+  os: a list of options
+  ss: a list of setups
+  tds: a list of teardowns
+  !#
+  (match s
+    (('suite d ts) (list 'suite d ts (list 'options opt)))
+    (('suite d ts os) (list 'suite d ts (opts-add-opt os opt)))
+    (('suite d ts os ss) (list 'suite d ts (opts-add-opt os opt) ss))
+    (('suite d ts os ss tds)
+      (list 'suite d ts (opts-add-opt os opt) ss tds))))
 
 (define (run-file fname opts)
   "Run all test suites found in the given file, and aggregate and return
@@ -49,8 +85,13 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
           ((eof-object? form)
             (list num-passes num-fails num-skips))
           ((equal? (car form) 'suite)
-            ;; Run the current test suite.
-            (let ((results (eval form (current-module))))
+            ;; Add options to the current suite and run it.
+            (let
+              ((results
+                (eval
+                  (fold suite-add-option form opts)
+                  (current-module))))
+
               (loop
                 (read f)
                 (+ num-passes (car results))
@@ -98,10 +139,30 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
       (help (single-char #\h) (value #f))
       (colour (single-char #\c) (value #f))
       (format (single-char #\f) (value #t)))))
-  (define result (run-tree "spec" cmd-line-opts))
-  (define total (apply + result))
   (define output-cb (option-ref cmd-line-opts 'format "normal"))
+  (define colour (option-ref cmd-line-opts 'colour #f))
 
+  (define opts
+    (list
+      `(option
+        'output-cb
+        ,(cond
+          ((equal? output-cb "normal") output-normal)
+          ((equal? output-cb "tap") output-tap)
+          (#t output-none)))
+      `(option 'colour ,colour)))
+  (define result (run-tree "spec" opts))
+  (define total (apply + result))
+
+  #!
+  TODO: move the result printing into the output-cb functions, e.g.
+  like:
+
+  (output-cb
+    #:tally-passed passed
+    #:tally-failed failed
+    #:tally-skipped skipped)
+  !#
   (cond
     ((equal? output-cb "normal")
       (println
@@ -115,10 +176,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
         (caddr result)
         "."))
     ((equal? output-cb "tap")
-      (println "1.." total))
-    (#t
-      (error
-        "I don't understand how you want the test results formatted."))))
+      (println "1.." total))))
 
 ;; vim:set ft=scheme:
 
