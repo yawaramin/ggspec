@@ -29,6 +29,9 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
   (ice-9 getopt-long)
   (ice-9 match))
 
+(define version-num "1.2")
+(define release-name "Gemini")
+
 (define (suite-add-option opt s)
   "Add an option to the read, unevaluated form of a suite.
 
@@ -131,6 +134,39 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
     (list 0 0 0) ; Seed value of result: passes fails skips
     dname))
 
+(define (show-help)
+  (println "ggspec - a unit test framework and runner for GNU Guile.")
+  (newline)
+  (println "ggspec will look in the current directory's 'spec' subdirectory and run")
+  (println "all tests it finds there.")
+  (newline)
+  (println "Usage: ggspec [-v|--version] [-h|--help] [-f|--format FMT] [-c|--colour]")
+  (newline)
+  (println "  -v")
+  (println "  --version")
+  (println "    Print version number of this command.")
+  (newline)
+  (println "  -h")
+  (println "  --help")
+  (println "    Print this help message.")
+  (newline)
+  (println "  -f FMT")
+  (println "  --format FMT")
+  (println "    Tell ggspec which output format to use. Formats are:")
+  (println "      normal (default). ggspec's output format.")
+  (println "      tap. output for the TAP test protocol.")
+  (newline)
+  (println "  -c")
+  (println "  --colour")
+  (println "    Tell ggspec to colour assertion success or failure messages.")
+  (exit))
+
+(define (show-version)
+  (println "ggspec " version-num " " release-name)
+  (println "Copyright (c) 2014 Yawar Amin.")
+  (println "License: MIT <http://opensource.org/licenses/MIT>")
+  (exit))
+
 (define (main args)
   (define cmd-line-opts
     (getopt-long
@@ -142,41 +178,47 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
   (define output-cb (option-ref cmd-line-opts 'format "normal"))
   (define colour (option-ref cmd-line-opts 'colour #f))
 
-  (define opts
-    (list
-      `(option
-        'output-cb
-        ,(cond
-          ((equal? output-cb "normal") output-normal)
-          ((equal? output-cb "tap") output-tap)
-          (#t output-none)))
-      `(option 'colour ,colour)))
-  (define result (run-tree "spec" opts))
-  (define total (apply + result))
+  (if (option-ref cmd-line-opts 'help #f)
+    (show-help))
+  (if (option-ref cmd-line-opts 'version #f)
+    (show-version))
 
-  #!
-  TODO: move the result printing into the output-cb functions, e.g.
-  like:
+  (let*
+    ((opts
+      (list
+        `(option
+          'output-cb
+          ,(cond
+            ((equal? output-cb "normal") output-normal)
+            ((equal? output-cb "tap") output-tap)
+            (#t output-none)))
+        `(option 'colour ,colour)))
+    (result (run-tree "spec" opts))
+    (total (apply + result)))
 
-  (output-cb
-    #:tally-passed passed
-    #:tally-failed failed
-    #:tally-skipped skipped)
-  !#
-  (cond
-    ((equal? output-cb "normal")
-      (println
-        "Total "
-        total
-        ", passed "
-        (car result)
-        ", failed "
-        (cadr result)
-        ", skipped "
-        (caddr result)
-        "."))
-    ((equal? output-cb "tap")
-      (println "1.." total))))
+    #!
+    TODO: move the result printing into the output-cb functions, e.g.
+    like:
+
+    (output-cb
+      #:tally-passed passed
+      #:tally-failed failed
+      #:tally-skipped skipped)
+    !#
+    (cond
+      ((equal? output-cb "normal")
+        (println
+          "Total "
+          total
+          ", passed "
+          (car result)
+          ", failed "
+          (cadr result)
+          ", skipped "
+          (caddr result)
+          "."))
+      ((equal? output-cb "tap")
+        (println "1.." total)))))
 
 ;; vim:set ft=scheme:
 

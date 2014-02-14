@@ -73,11 +73,12 @@ guile> (use-modules (ggspec lib))
 guile> (suite "Hello ggspec" end)
   Suite: Hello ggspec
 
-(0 0)
+(0 0 0)
 ```
 
-The last line above shows the number of passing tests and the number of
-failing tests. Since we didn't write _any_ tests here, both are zero.
+The last line above shows the number of passing tests, failing tests,
+and skipped tests. Since we didn't write _any_ tests here, all three are
+zero.
 
 ## Introduction
 
