@@ -90,19 +90,21 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
       #t))
 
-  (println
-    "Total "
-    (+ passed failed skipped)
-    ", passed "
-    passed
-    ", failed "
-    failed
-    ", skipped "
-    skipped
-    "."))
+  (list passed failed skipped))
 
 (define (main)
-  (run-tree "spec"))
+  (define result (run-tree "spec"))
+
+  (println
+    "Total "
+    (apply + result)
+    ", passed "
+    (car result)
+    ", failed "
+    (cadr result)
+    ", skipped "
+    (caddr result)
+    "."))
 
 (main)
 
