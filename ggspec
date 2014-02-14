@@ -1,4 +1,5 @@
-#!/usr/bin/env guile
+#!/usr/bin/guile \
+-e main -s
 ggspec - run a set of test suites in your project's 'spec' subdirectory.
 
 Copyright (c) 2014 Yawar Amin
@@ -23,9 +24,10 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 !#
 (use-modules
   (ggspec lib)
-  (ice-9 ftw))
+  (ice-9 ftw)
+  (ice-9 getopt-long))
 
-(define (run-file fname)
+(define (run-file fname opts)
   "Run all test suites found in the given file, and aggregate and return
   the number of passed and failed tests.
 
@@ -61,7 +63,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
               ;; Go on to the next form, with results unchanged.
               (loop (read f) num-passes num-fails num-skips))))))))
 
-(define (run-tree dname)
+(define (run-tree dname opts)
   "Run all test suites found in files in the given directory and all its
   subdirectories, and aggregate and return the number of passed and
   failed tests.
@@ -81,7 +83,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
       (define filename-length (string-length filename))
 
       (if (equal? (substring filename (- filename-length 4)) ".scm")
-        (let ((file-results (run-file filename)))
+        (let ((file-results (run-file filename opts)))
           (set! passed (+ passed (car file-results)))
           (set! failed
             (+ failed (cadr file-results)))
@@ -92,21 +94,34 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
   (list passed failed skipped))
 
-(define (main)
-  (define result (run-tree "spec"))
+(define (main args)
+  (define cmd-line-opts
+    (getopt-long
+      args
+      '((version (single-char #\v) (value #f))
+      (help (single-char #\h) (value #f))
+      (colour (single-char #\c) (value #f))
+      (format (single-char #\f) (value #t)))))
+  (define result (run-tree "spec" cmd-line-opts))
+  (define total (apply + result))
+  (define output-cb (option-ref cmd-line-opts 'format "normal"))
 
-  (println
-    "Total "
-    (apply + result)
-    ", passed "
-    (car result)
-    ", failed "
-    (cadr result)
-    ", skipped "
-    (caddr result)
-    "."))
-
-(main)
+  (cond
+    ((equal? output-cb "normal")
+      (println
+        "Total "
+        total
+        ", passed "
+        (car result)
+        ", failed "
+        (cadr result)
+        ", skipped "
+        (caddr result)
+        "."))
+    ((equal? output-cb "tap")
+      (println "1.." total))
+    (#t
+      (error "I don't understand how you want the test results formatted."))))
 
 ;; vim:set ft=scheme:
 
