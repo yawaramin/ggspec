@@ -138,6 +138,60 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
         (options
           (option 'output-cb output-none))))))
 
+(suite "The suite-add-option function"
+  (tests
+    (test "Should add an option to a suite with a description and tests only"
+      e
+      (assert-equal
+        '(suite "Suite"
+          (tests (test "Test" e (assert-true #t)))
+          (options (option 'a 1)))
+        (suite-add-option
+          (e 'opt)
+          '(suite "Suite"
+            (tests (test "Test" e (assert-true #t)))))))
+    (test "Should add an option to a suite with a description, tests, and options"
+      e
+      (assert-equal
+        '(suite "Suite"
+          (tests (test "Test" e (assert-true #t)))
+          (options (option 'a 1) (option 'b 2)))
+        (suite-add-option
+          (e 'opt)
+          '(suite "Suite"
+            (tests (test "Test" e (assert-true #t)))
+            (options (option 'b 2))))))
+    (test "Should add an option to a suite with a description, tests, options, and setups"
+      e
+      (assert-equal
+        '(suite "Suite"
+          (tests (test "Test" e (assert-true #t)))
+          (options (option 'a 1) (option 'b 2))
+          (setups))
+        (suite-add-option
+          (e 'opt)
+          '(suite "Suite"
+            (tests (test "Test" e (assert-true #t)))
+            (options (option 'b 2))
+            (setups)))))
+    (test "Should add an option to a suite with a description, tests, options, setups, and teardowns"
+      e
+      (assert-equal
+        '(suite "Suite"
+          (tests (test "Test" e (assert-true #t)))
+          (options (option 'a 1) (option 'b 2))
+          (setups)
+          (teardowns))
+        (suite-add-option
+          (e 'opt)
+          '(suite "Suite"
+            (tests (test "Test" e (assert-true #t)))
+            (options (option 'b 2))
+            (setups)
+            (teardowns))))))
+  (options)
+  (setups (setup 'opt '(option 'a 1))))
+
 (suite "The output-normal function"
   (tests
     (test "Should display all diagnostics correctly"

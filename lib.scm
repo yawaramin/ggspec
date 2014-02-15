@@ -24,6 +24,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 (define-module (ggspec lib)
   #:use-module (srfi srfi-1)
   #:use-module (srfi srfi-16)
+  #:use-module (ice-9 match)
   #:export
     (
     assert-equal
@@ -34,6 +35,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
     end
     error?
     suite
+    suite-add-option
     suite-passed
     suite-failed
     suite-skipped
@@ -580,4 +582,38 @@ Varieties of calls to the 'output-cb' function(s)
             (println "# Test failed: details unavailable")))))))
 
 (define output-none stubf)
+
+(define (suite-add-option opt s)
+  "Add an option to the read, unevaluated form of a suite.
+
+  Arguments
+    opt: '(option k v)
+
+      k: symbol: name of the option.
+      v: any; value of the option.
+
+    s: form: a read, unevaluated 'suite' form:
+
+      (suite desc tsts opts sups tdowns)
+
+  Returns
+    A read, unevaluated suite with the option added."
+  (define (opts-add-opt os o)
+    (cons 'options (cons o (cdr os))))
+
+  #!
+  Below, variable names have the following meanings:
+
+  d: suite description
+  ts: a list of tests
+  os: a list of options
+  ss: a list of setups
+  tds: a list of teardowns
+  !#
+  (match s
+    (('suite d ts) (list 'suite d ts (list 'options opt)))
+    (('suite d ts os) (list 'suite d ts (opts-add-opt os opt)))
+    (('suite d ts os ss) (list 'suite d ts (opts-add-opt os opt) ss))
+    (('suite d ts os ss tds)
+      (list 'suite d ts (opts-add-opt os opt) ss tds))))
 
