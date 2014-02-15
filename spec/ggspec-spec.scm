@@ -153,17 +153,17 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
         "    [SKIP] This should be skipped\n"
         "    [PASS]\n"
         "    [FAIL] 1 should equal 2\n"
-        "      Expected: 2\n"
-        "           Got: 1\n"
+        "      Expected: '2'\n"
+        "           Got: '1'\n"
         "    [FAIL] 1 should not equal 1\n"
-        "      Expected: not 1\n"
-        "           Got: 1\n"
+        "      Expected: not '1'\n"
+        "           Got: '1'\n"
         "    [FAIL] true should be false\n"
-        "      Expected: false\n"
-        "           Got: true\n"
+        "      Expected: 'false'\n"
+        "           Got: 'true'\n"
         "    [FAIL] 1/0 should not be an error\n"
-        "      Expected: false\n"
-        "           Got: true\n"
+        "      Expected: 'false'\n"
+        "           Got: 'true'\n"
         "\n"))
     (setup 'suite-thunk
       (lambda ()
@@ -197,17 +197,19 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
         "ok - This should be skipped # SKIP\n"
         "ok - This should pass\n"
         "not ok - 1 should equal 2\n"
-        "# Expected: 2\n"
-        "#      Got: 1\n"
+        "# Expected: '2'\n"
+        "#      Got: '1'\n"
         "not ok - 1 should not equal 1\n"
-        "# Expected: not 1\n"
-        "#      Got: 1\n"
+        "# Expected: not '1'\n"
+        "#      Got: '1'\n"
         "not ok - true should be false\n"
-        "# Expected: false\n"
-        "#      Got: true\n"
+        "# Expected: 'false'\n"
+        "#      Got: 'true'\n"
         "not ok - 1/0 should not be an error\n"
-        "# Expected: false\n"
-        "#      Got: true\n"))
+        "# Expected: 'false'\n"
+        "#      Got: 'true'\n"
+        "1..6"
+        "\n"))
     (setup 'suite-thunk
       (lambda ()
         (suite "internal"
@@ -225,5 +227,6 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
               e
               (assert-false (error? (/ 1 0)))))
           (options
-            (option 'output-cb output-tap)))))))
+            (option 'output-cb output-tap)
+            (option 'tally #t)))))))
 
