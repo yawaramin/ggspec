@@ -607,7 +607,12 @@ Varieties of calls to the 'output-cb' function(s)
   Returns
     A read, unevaluated suite with the option added."
   (define (opts-add-opt os o)
-    (cons 'options (cons o (cdr os))))
+    (if
+      (member
+        (cadr o)
+        (map (lambda (opt) (cadr opt)) (cdr os)))
+      os
+      (cons 'options (cons o (cdr os)))))
 
   #!
   Below, variable names have the following meanings:

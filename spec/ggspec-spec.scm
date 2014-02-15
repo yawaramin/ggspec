@@ -188,7 +188,18 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
             (tests (test "Test" e (assert-true #t)))
             (options (option 'b 2))
             (setups)
-            (teardowns))))))
+            (teardowns)))))
+    (test "Should not add an option if the suite already has that option"
+      e
+      (assert-equal
+        '(suite "Suite"
+          (tests (test "Test" e (assert-true #t)))
+          (options (option 'a 0)))
+        (suite-add-option
+          (e 'opt)
+          '(suite "Suite"
+            (tests (test "Test" e (assert-true #t)))
+            (options (option 'a 0)))))))
   (options)
   (setups (setup 'opt '(option 'a 1))))
 
