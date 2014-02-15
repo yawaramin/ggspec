@@ -26,46 +26,10 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
   (srfi srfi-1)
   (ggspec lib)
   (ice-9 ftw)
-  (ice-9 getopt-long)
-  (ice-9 match))
+  (ice-9 getopt-long))
 
 (define version-num "1.2")
 (define release-name "Gemini")
-
-(define (suite-add-option opt s)
-  "Add an option to the read, unevaluated form of a suite.
-
-  Arguments
-    opt: '(option k v)
-
-      k: symbol: name of the option.
-      v: any; value of the option.
-
-    s: form: a read, unevaluated 'suite' form:
-
-      (suite desc tsts opts sups tdowns)
-
-  Returns
-    A read, unevaluated suite with the option added."
-  (define (opts-add-opt os o)
-    (cons 'options (cons o (cdr os))))
-
-  #!
-  Below, variable names have the following meanings:
-
-  d: suite description
-  ts: a list of tests
-  os: a list of options
-  ss: a list of setups
-  tds: a list of teardowns
-  !#
-  (match s
-    (('suite d ts) (list 'suite d ts (list 'options opt)))
-    (('suite d ts os) (list 'suite d ts (opts-add-opt os opt)))
-    (('suite d ts os ss) (list 'suite d ts (opts-add-opt os opt) ss))
-    (('suite d ts os ss tds)
-      (list 'suite d ts (opts-add-opt os opt) ss tds))))
-
 (define (run-file fname opts)
   "Run all test suites found in the given file, and aggregate and return
   the number of passed and failed tests.
@@ -97,9 +61,9 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
               (loop
                 (read f)
-                (+ num-passes (car results))
-                (+ num-fails (cadr results))
-                (+ num-skips (caddr results)))))
+                (+ num-passes (suite-passed results))
+                (+ num-fails (suite-failed results))
+                (+ num-skips (suite-skipped results)))))
           (#t
             ;; This is some form other than a suite definition.
             (begin
@@ -124,9 +88,9 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
       (if (equal? (substring path (- path-length 4)) ".scm")
         (let ((file-result (run-file path opts)))
           (list
-            (+ (car result) (car file-result))
-            (+ (cadr result) (cadr file-result))
-            (+ (caddr result) (caddr file-result))))))
+            (+ (suite-passed result) (suite-passed file-result))
+            (+ (suite-failed result) (suite-failed file-result))
+            (+ (suite-skipped result) (suite-skipped file-result))))))
     up-down-skip
     up-down-skip
     up-down-skip
@@ -194,7 +158,8 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
             (#t output-none)))
         `(option 'colour ,colour)))
     (result (run-tree "spec" opts))
-    (total (apply + result)))
+    (total (apply + result))
+    (failed (suite-failed result)))
 
     #!
     TODO: move the result printing into the output-cb functions, e.g.
@@ -211,14 +176,15 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
           "Total "
           total
           ", passed "
-          (car result)
+          (suite-passed result)
           ", failed "
-          (cadr result)
+          failed
           ", skipped "
-          (caddr result)
+          (suite-skipped result)
           "."))
       ((equal? output-cb "tap")
-        (println "1.." total)))))
+        (println "1.." total)))
+    (exit failed)))
 
 ;; vim:set ft=scheme:
 

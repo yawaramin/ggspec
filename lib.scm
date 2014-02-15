@@ -24,6 +24,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 (define-module (ggspec lib)
   #:use-module (srfi srfi-1)
   #:use-module (srfi srfi-16)
+  #:use-module (ice-9 match)
   #:export
     (
     assert-equal
@@ -34,6 +35,10 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
     end
     error?
     suite
+    suite-add-option
+    suite-passed
+    suite-failed
+    suite-skipped
     options
     option
     println
@@ -242,11 +247,11 @@ Returns
     ((desc tsts opts sups tdowns)
       (define output-cb
         (if-let v (assoc-ref opts 'output-cb) v output-normal))
-      (define colour (if-let v (assoc-ref opts 'colour) v))
-      (define skip (if-let v (assoc-ref opts 'skip) v))
+      (define colour? (if-let v (assoc-ref opts 'colour) v))
+      (define skip? (if-let v (assoc-ref opts 'skip) v))
 
       (output-cb #:suite-desc desc)
-      (if skip
+      (if skip?
         ;; Skip all tests in this suite.
         (begin
           (for-each
@@ -302,7 +307,7 @@ Returns
                     (for-each (lambda (td) (td)) tdowns)
                     ;; Output diagnostics:
                     (output-cb
-                      #:colour colour
+                      #:colour colour?
                       #:test-desc test-desc
                       #:test-status (if test-status 'pass 'fail)
                       #:got got
@@ -312,13 +317,13 @@ Returns
                   (filter
                     (lambda (tst)
                       ;; If a 'skip option is given in a test ...
-                      (if-let skip (assoc-ref (cadr tst) 'skip)
+                      (if-let skip? (assoc-ref (cadr tst) 'skip)
                         ;; Skip this test if the 'skip option has a value #t
                         (begin
                           (output-cb
                             #:test-desc (car tst)
                             #:test-status 'skip)
-                          (not skip))
+                          (not skip?))
                         ;; If a 'skip option is not given, don't skip this
                         ;; test
                         #t))
@@ -333,7 +338,7 @@ Returns
                   intermediate-results)))
             (num-skips (- (length tsts) num-passes num-fails)))
 
-            (if-let tally (assoc-ref opts 'tally)
+            (if-let tally? (assoc-ref opts 'tally)
               (output-cb
                 #:tally-passed num-passes
                 #:tally-failed num-fails
@@ -346,6 +351,10 @@ Returns
     ((desc tsts) (suite desc tsts end end end))
     ((desc tsts opts) (suite desc tsts opts end end))
     ((desc tsts opts sups) (suite desc tsts opts sups end))))
+
+(define (suite-passed s) (car s))
+(define (suite-failed s) (cadr s))
+(define (suite-skipped s) (caddr s))
 
 (define options list)
 (define option cons)
@@ -462,7 +471,7 @@ Varieties of calls to the 'output-cb' function(s)
 
 #:test-desc desc #:test-status 'skip
 
-#:colour colour
+#:colour (#t OR #f)
 #:test-desc test-desc
 #:test-status ('pass OR 'fail OR 'skip)
 #:got got
@@ -571,4 +580,38 @@ Varieties of calls to the 'output-cb' function(s)
             (println "# Test failed: details unavailable")))))))
 
 (define output-none stubf)
+
+(define (suite-add-option opt s)
+  "Add an option to the read, unevaluated form of a suite.
+
+  Arguments
+    opt: '(option k v)
+
+      k: symbol: name of the option.
+      v: any; value of the option.
+
+    s: form: a read, unevaluated 'suite' form:
+
+      (suite desc tsts opts sups tdowns)
+
+  Returns
+    A read, unevaluated suite with the option added."
+  (define (opts-add-opt os o)
+    (cons 'options (cons o (cdr os))))
+
+  #!
+  Below, variable names have the following meanings:
+
+  d: suite description
+  ts: a list of tests
+  os: a list of options
+  ss: a list of setups
+  tds: a list of teardowns
+  !#
+  (match s
+    (('suite d ts) (list 'suite d ts (list 'options opt)))
+    (('suite d ts os) (list 'suite d ts (opts-add-opt os opt)))
+    (('suite d ts os ss) (list 'suite d ts (opts-add-opt os opt) ss))
+    (('suite d ts os ss tds)
+      (list 'suite d ts (opts-add-opt os opt) ss tds))))
 

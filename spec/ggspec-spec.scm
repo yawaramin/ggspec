@@ -120,9 +120,9 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
       (begin
         (define results (e 's))
         (assert-all
-          (assert-equal 1 (car results))
-          (assert-equal 1 (cadr results))
-          (assert-equal 1 (caddr results))))))
+          (assert-equal 1 (suite-passed results))
+          (assert-equal 1 (suite-failed results))
+          (assert-equal 1 (suite-skipped results))))))
   (options)
   (setups
     (setup 's
@@ -138,95 +138,127 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
         (options
           (option 'output-cb output-none))))))
 
-(suite "The output-normal function"
+(suite "The suite-add-option function"
   (tests
-    (test "Should display all diagnostics correctly"
+    (test "Should add an option to a suite with a description and tests only"
       e
       (assert-equal
-        (e 'output)
-        (with-output-to-string (e 'suite-thunk)))))
+        '(suite "Suite"
+          (tests (test "Test" e (assert-true #t)))
+          (options (option 'a 1)))
+        (suite-add-option
+          (e 'opt)
+          '(suite "Suite"
+            (tests (test "Test" e (assert-true #t)))))))
+    (test "Should add an option to a suite with a description, tests, and options"
+      e
+      (assert-equal
+        '(suite "Suite"
+          (tests (test "Test" e (assert-true #t)))
+          (options (option 'a 1) (option 'b 2)))
+        (suite-add-option
+          (e 'opt)
+          '(suite "Suite"
+            (tests (test "Test" e (assert-true #t)))
+            (options (option 'b 2))))))
+    (test "Should add an option to a suite with a description, tests, options, and setups"
+      e
+      (assert-equal
+        '(suite "Suite"
+          (tests (test "Test" e (assert-true #t)))
+          (options (option 'a 1) (option 'b 2))
+          (setups))
+        (suite-add-option
+          (e 'opt)
+          '(suite "Suite"
+            (tests (test "Test" e (assert-true #t)))
+            (options (option 'b 2))
+            (setups)))))
+    (test "Should add an option to a suite with a description, tests, options, setups, and teardowns"
+      e
+      (assert-equal
+        '(suite "Suite"
+          (tests (test "Test" e (assert-true #t)))
+          (options (option 'a 1) (option 'b 2))
+          (setups)
+          (teardowns))
+        (suite-add-option
+          (e 'opt)
+          '(suite "Suite"
+            (tests (test "Test" e (assert-true #t)))
+            (options (option 'b 2))
+            (setups)
+            (teardowns))))))
   (options)
-  (setups
-    (setup 'output
-      (string-append
-        "  Suite: internal\n"
-        "    [SKIP] This should be skipped\n"
-        "    [PASS]\n"
-        "    [FAIL] 1 should equal 2\n"
-        "      Expected: '2'\n"
-        "           Got: '1'\n"
-        "    [FAIL] 1 should not equal 1\n"
-        "      Expected: not '1'\n"
-        "           Got: '1'\n"
-        "    [FAIL] true should be false\n"
-        "      Expected: 'false'\n"
-        "           Got: 'true'\n"
-        "    [FAIL] 1/0 should not be an error\n"
-        "      Expected: 'false'\n"
-        "           Got: 'true'\n"
-        "\n"))
-    (setup 'suite-thunk
-      (lambda ()
-        (suite "internal"
-          (tests
-            (test "This should pass" e (assert-equal 1 1))
-            (test "This should be skipped"
-              e
-              (assert-equal 2 1)
-              (options
-                (option 'skip #t)))
-            (test "1 should equal 2" e (assert-equal 2 1))
-            (test "1 should not equal 1" e (assert-not-equal 1 1))
-            (test "true should be false" e (assert-false #t))
-            (test "1/0 should not be an error"
-              e
-              (assert-false (error? (/ 1 0))))))))))
+  (setups (setup 'opt '(option 'a 1))))
 
-(suite "The output-tap function"
+(suite "The output functions"
   (tests
-    (test "Should display all diagnostics correctly"
+    (test "Should display normal diagnostics correctly"
       e
       (assert-equal
-        (e 'output)
-        (with-output-to-string (e 'suite-thunk)))))
+        (string-append
+          "  Suite: internal\n"
+          "    [SKIP] This should be skipped\n"
+          "    [PASS]\n"
+          "    [FAIL] 1 should equal 2\n"
+          "      Expected: '2'\n"
+          "           Got: '1'\n"
+          "    [FAIL] 1 should not equal 1\n"
+          "      Expected: not '1'\n"
+          "           Got: '1'\n"
+          "    [FAIL] true should be false\n"
+          "      Expected: 'false'\n"
+          "           Got: 'true'\n"
+          "    [FAIL] 1/0 should not be an error\n"
+          "      Expected: 'false'\n"
+          "           Got: 'true'\n"
+          "\n")
+        (with-output-to-string
+          (lambda () (eval (e 's) (current-module))))))
+    (test "Should display TAP diagnostics correctly"
+      e
+      (assert-equal
+        (string-append
+          "# Suite: internal\n"
+          "ok - This should be skipped # SKIP\n"
+          "ok - This should pass\n"
+          "not ok - 1 should equal 2\n"
+          "# Expected: '2'\n"
+          "#      Got: '1'\n"
+          "not ok - 1 should not equal 1\n"
+          "# Expected: not '1'\n"
+          "#      Got: '1'\n"
+          "not ok - true should be false\n"
+          "# Expected: 'false'\n"
+          "#      Got: 'true'\n"
+          "not ok - 1/0 should not be an error\n"
+          "# Expected: 'false'\n"
+          "#      Got: 'true'\n"
+          "1..6\n")
+        (with-output-to-string
+          (lambda ()
+            (eval
+              (suite-add-option
+                '(option 'output-cb output-tap)
+                (e 's))
+              (current-module)))))))
   (options)
   (setups
-    (setup 'output
-      (string-append
-        "# Suite: internal\n"
-        "ok - This should be skipped # SKIP\n"
-        "ok - This should pass\n"
-        "not ok - 1 should equal 2\n"
-        "# Expected: '2'\n"
-        "#      Got: '1'\n"
-        "not ok - 1 should not equal 1\n"
-        "# Expected: not '1'\n"
-        "#      Got: '1'\n"
-        "not ok - true should be false\n"
-        "# Expected: 'false'\n"
-        "#      Got: 'true'\n"
-        "not ok - 1/0 should not be an error\n"
-        "# Expected: 'false'\n"
-        "#      Got: 'true'\n"
-        "1..6"
-        "\n"))
-    (setup 'suite-thunk
-      (lambda ()
-        (suite "internal"
-          (tests
-            (test "This should pass" e (assert-equal 1 1))
-            (test "This should be skipped"
-              e
-              (assert-equal 2 1)
-              (options
-                (option 'skip #t)))
-            (test "1 should equal 2" e (assert-equal 2 1))
-            (test "1 should not equal 1" e (assert-not-equal 1 1))
-            (test "true should be false" e (assert-false #t))
-            (test "1/0 should not be an error"
-              e
-              (assert-false (error? (/ 1 0)))))
-          (options
-            (option 'output-cb output-tap)
-            (option 'tally #t)))))))
+    (setup 's
+      '(suite "internal"
+        (tests
+          (test "This should pass" e (assert-equal 1 1))
+          (test "This should be skipped"
+            e
+            (assert-equal 2 1)
+            (options
+              (option 'skip #t)))
+          (test "1 should equal 2" e (assert-equal 2 1))
+          (test "1 should not equal 1" e (assert-not-equal 1 1))
+          (test "true should be false" e (assert-false #t))
+          (test "1/0 should not be an error"
+            e
+            (assert-false (error? (/ 1 0)))))
+        (options (option 'tally #t))))))
 
