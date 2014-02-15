@@ -30,6 +30,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 (define version-num "1.2")
 (define release-name "Gemini")
+
 (define (run-file fname opts)
   "Run all test suites found in the given file, and aggregate and return
   the number of passed and failed tests.
@@ -103,36 +104,40 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
   (list passed failed skipped))
 
 (define (show-help)
-  (println "ggspec - a unit test framework and runner for GNU Guile.")
-  (newline)
-  (println "ggspec will look in the current directory's 'spec' subdirectory and run")
-  (println "all tests it finds there.")
-  (newline)
-  (println "Usage: ggspec [-v|--version] [-h|--help] [-f|--format FMT] [-c|--colour]")
-  (newline)
-  (println "  -v")
-  (println "  --version")
-  (println "    Print version number of this command.")
-  (newline)
-  (println "  -h")
-  (println "  --help")
-  (println "    Print this help message.")
-  (newline)
-  (println "  -f FMT")
-  (println "  --format FMT")
-  (println "    Tell ggspec which output format to use. Formats are:")
-  (println "      normal (default). ggspec's output format.")
-  (println "      tap. output for the TAP test protocol.")
-  (newline)
-  (println "  -c")
-  (println "  --colour")
-  (println "    Tell ggspec to colour assertion success or failure messages.")
+  (println
+    (string-append
+      "ggspec - a unit test framework and runner for GNU Guile.\n"
+      "\n"
+      "ggspec will look in the current directory's 'spec' subdirectory and run\n"
+      "all tests it finds there.\n"
+      "\n"
+      "Usage: ggspec [-v|--version] [-h|--help] [-f|--format FMT] [-c|--colour]\n"
+      "\n"
+      "  -v\n"
+      "  --version\n"
+      "    Print version number of this command.\n"
+      "\n"
+      "  -h\n"
+      "  --help\n"
+      "    Print this help message.\n"
+      "\n"
+      "  -f FMT\n"
+      "  --format FMT\n"
+      "    Tell ggspec which output format to use. Formats are:\n"
+      "      normal. (default) ggspec's output format.\n"
+      "      tap. output for the TAP test protocol.\n"
+      "\n"
+      "  -c\n"
+      "  --colour\n"
+      "    Tell ggspec to colour assertion success or failure messages.\n"))
   (exit))
 
 (define (show-version)
-  (println "ggspec " version-num " " release-name)
-  (println "Copyright (c) 2014 Yawar Amin.")
-  (println "License: MIT <http://opensource.org/licenses/MIT>")
+  (println
+    (string-append
+      "ggspec " version-num " " release-name "\n"
+      "Copyright (c) 2014 Yawar Amin.\n"
+      "License: MIT <http://opensource.org/licenses/MIT>\n"))
   (exit))
 
 (define (main args)
