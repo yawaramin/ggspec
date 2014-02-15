@@ -74,11 +74,11 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
   "Stubs a function to return a canned value.
 
   Arguments:
-  retval - any: the canned value to return.
+    retval: any: the canned value to return.
 
   Returns:
-  A function that takes any combination of arguments and returns the
-  canned value."
+    A function that takes any combination of arguments and returns the
+    canned value."
   (lambda _ retval))
 
 ;; A frequently-used stub.
@@ -206,7 +206,8 @@ Arguments
       opts: same as above.
       expr: the body of the test.
 
-  opts: (list opt ...): a collection of options to pass into the suite.
+  opts: (list opt ...): a collection of options to pass in to the suite.
+  Optional. Default is no options to pass in to the suite.
 
     opt:
       (list
@@ -216,7 +217,7 @@ Arguments
       opt-val: any: the value being given to the option.
 
   sups: (list sup ...): a collection of setup names and values to pass
-  into each test.
+  into each test. Optional. Default is no setups.
 
     sup: (cons sup-name sup-val)
 
@@ -227,7 +228,7 @@ Arguments
         each test run. Will be re-evaluated each time a test is run.
 
   tdowns: (list tdown ...): a collection of teardowns to run after
-  running each test.
+  running each test. Optional. Default is no teardowns.
 
     tdown: (teardown (lambda () body ...))
 
@@ -320,14 +321,19 @@ Returns
                     (lambda (tst)
                       ;; If a 'skip option is given in a test ...
                       (if-let skip? (assoc-ref (cadr tst) 'skip)
-                        ;; Skip this test if the 'skip option has a value #t
+                        #!
+                        Skip this test if the 'skip option has a value
+                        #t
+                        !#
                         (begin
                           (output-cb
                             #:test-desc (car tst)
                             #:test-status 'skip)
                           (not skip?))
-                        ;; If a 'skip option is not given, don't skip this
-                        ;; test
+                        #!
+                        If a 'skip option is not given, don't skip this
+                        test
+                        !#
                         #t))
                     tsts)
                   end)))
@@ -479,6 +485,11 @@ Varieties of calls to the 'output-cb' function(s)
 #:got got
 (#:not-expected OR #:expected) expected
 
+#:final-tally (#t OR #f)
+#:tally-passed num-passes
+#:tally-failed num-fails
+#:tally-skipped num-skips
+
 #:tally-passed num-passes
 #:tally-failed num-fails
 #:tally-skipped num-skips
@@ -520,7 +531,12 @@ Varieties of calls to the 'output-cb' function(s)
         (#t ; The test failed:
           (if-let got (kw 'got)
             (begin
-              (println "    " colour-red "[FAIL] " colour-normal test-desc)
+              (println
+                "    "
+                colour-red
+                "[FAIL] "
+                colour-normal
+                test-desc)
               (if-let expected (kw 'expected)
                 (begin
                   (println "      Expected: '" expected "'")
@@ -597,14 +613,16 @@ Varieties of calls to the 'output-cb' function(s)
   "Add an option to the read, unevaluated form of a suite.
 
   Arguments
-    opt: '(option k v)
+    opt: '(option 'k v)
 
-      k: symbol: name of the option.
-      v: any; value of the option.
+      'k: symbol: name of the option.
+      v: any: value of the option.
 
     s: form: a read, unevaluated 'suite' form:
 
       (suite desc tsts opts sups tdowns)
+
+      opts, sups, and tdowns may be missing.
 
   Returns
     A read, unevaluated suite with the option added."
