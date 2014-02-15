@@ -97,9 +97,9 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
               (loop
                 (read f)
-                (+ num-passes (car results))
-                (+ num-fails (cadr results))
-                (+ num-skips (caddr results)))))
+                (+ num-passes (suite-passed results))
+                (+ num-fails (suite-failed results))
+                (+ num-skips (suite-skipped results)))))
           (#t
             ;; This is some form other than a suite definition.
             (begin
@@ -128,11 +128,11 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
       (if (equal? (substring filename (- filename-length 4)) ".scm")
         (let ((file-results (run-file filename opts)))
-          (set! passed (+ passed (car file-results)))
+          (set! passed (+ passed (suite-passed file-results)))
           (set! failed
-            (+ failed (cadr file-results)))
+            (+ failed (suite-failed file-results)))
           (set! skipped
-            (+ skipped (caddr file-results)))))
+            (+ skipped (suite-skipped file-results)))))
 
       #t))
 
@@ -199,7 +199,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
         `(option 'colour ,colour)))
     (result (run-tree "spec" opts))
     (total (apply + result))
-    (failed (cadr result)))
+    (failed (suite-failed result)))
 
     #!
     TODO: move the result printing into the output-cb functions, e.g.
@@ -216,11 +216,11 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
           "Total "
           total
           ", passed "
-          (car result)
+          (suite-passed result)
           ", failed "
           failed
           ", skipped "
-          (caddr result)
+          (suite-skipped result)
           "."))
       ((equal? output-cb "tap")
         (println "1.." total)))

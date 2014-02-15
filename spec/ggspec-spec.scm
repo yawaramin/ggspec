@@ -120,9 +120,9 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
       (begin
         (define results (e 's))
         (assert-all
-          (assert-equal 1 (car results))
-          (assert-equal 1 (cadr results))
-          (assert-equal 1 (caddr results))))))
+          (assert-equal 1 (suite-passed results))
+          (assert-equal 1 (suite-failed results))
+          (assert-equal 1 (suite-skipped results))))))
   (options)
   (setups
     (setup 's

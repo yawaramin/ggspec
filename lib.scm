@@ -34,6 +34,9 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
     end
     error?
     suite
+    suite-passed
+    suite-failed
+    suite-skipped
     options
     option
     println
@@ -348,6 +351,10 @@ Returns
     ((desc tsts) (suite desc tsts end end end))
     ((desc tsts opts) (suite desc tsts opts end end))
     ((desc tsts opts sups) (suite desc tsts opts sups end))))
+
+(define (suite-passed s) (car s))
+(define (suite-failed s) (cadr s))
+(define (suite-skipped s) (caddr s))
 
 (define options list)
 (define option cons)
