@@ -499,6 +499,16 @@ Varieties of calls to the 'output-cb' function(s)
 
   (if-let suite-desc (kw 'suite-desc) (println "  Suite: " suite-desc))
   (if-let suite-status (kw 'suite-status) (newline))
+  (if-let final-tally? (kw 'final-tally)
+    (if-let passed (kw 'tally-passed)
+      (if-let failed (kw 'tally-failed)
+        (if-let skipped (kw 'tally-skipped)
+          (println
+            "Total " (+ passed failed skipped)
+            ", passed " passed
+            ", failed " failed
+            ", skipped " skipped
+            ".")))))
 
   (if-let test-status (kw 'test-status)
     (if-let test-desc (kw 'test-desc)
