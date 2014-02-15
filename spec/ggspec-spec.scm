@@ -208,8 +208,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
         "not ok - 1/0 should not be an error\n"
         "# Expected: 'false'\n"
         "#      Got: 'true'\n"
-        "1..6"
-        "\n"))
+        "1..6\n"))
     (setup 'suite-thunk
       (lambda ()
         (suite "internal"

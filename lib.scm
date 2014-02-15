@@ -247,11 +247,11 @@ Returns
     ((desc tsts opts sups tdowns)
       (define output-cb
         (if-let v (assoc-ref opts 'output-cb) v output-normal))
-      (define colour (if-let v (assoc-ref opts 'colour) v))
-      (define skip (if-let v (assoc-ref opts 'skip) v))
+      (define colour? (if-let v (assoc-ref opts 'colour) v))
+      (define skip? (if-let v (assoc-ref opts 'skip) v))
 
       (output-cb #:suite-desc desc)
-      (if skip
+      (if skip?
         ;; Skip all tests in this suite.
         (begin
           (for-each
@@ -307,7 +307,7 @@ Returns
                     (for-each (lambda (td) (td)) tdowns)
                     ;; Output diagnostics:
                     (output-cb
-                      #:colour colour
+                      #:colour colour?
                       #:test-desc test-desc
                       #:test-status (if test-status 'pass 'fail)
                       #:got got
@@ -317,13 +317,13 @@ Returns
                   (filter
                     (lambda (tst)
                       ;; If a 'skip option is given in a test ...
-                      (if-let skip (assoc-ref (cadr tst) 'skip)
+                      (if-let skip? (assoc-ref (cadr tst) 'skip)
                         ;; Skip this test if the 'skip option has a value #t
                         (begin
                           (output-cb
                             #:test-desc (car tst)
                             #:test-status 'skip)
-                          (not skip))
+                          (not skip?))
                         ;; If a 'skip option is not given, don't skip this
                         ;; test
                         #t))
@@ -338,7 +338,7 @@ Returns
                   intermediate-results)))
             (num-skips (- (length tsts) num-passes num-fails)))
 
-            (if-let tally (assoc-ref opts 'tally)
+            (if-let tally? (assoc-ref opts 'tally)
               (output-cb
                 #:tally-passed num-passes
                 #:tally-failed num-fails
@@ -471,7 +471,7 @@ Varieties of calls to the 'output-cb' function(s)
 
 #:test-desc desc #:test-status 'skip
 
-#:colour colour
+#:colour (#t OR #f)
 #:test-desc test-desc
 #:test-status ('pass OR 'fail OR 'skip)
 #:got got
