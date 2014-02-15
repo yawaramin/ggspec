@@ -330,13 +330,19 @@ Returns
               (length
                 (filter
                   (lambda (result) (not result))
-                  intermediate-results))))
+                  intermediate-results)))
+            (num-skips (- (length tsts) num-passes num-fails)))
 
+            (if-let tally (assoc-ref opts 'tally)
+              (output-cb
+                #:tally-passed num-passes
+                #:tally-failed num-fails
+                #:tally-skipped num-skips))
             (output-cb #:suite-status 'complete)
             (list
               num-passes
               num-fails
-              (- (length tsts) num-passes num-fails))))))
+              num-skips)))))
     ((desc tsts) (suite desc tsts end end end))
     ((desc tsts opts) (suite desc tsts opts end end))
     ((desc tsts opts sups) (suite desc tsts opts sups end))))
@@ -462,6 +468,10 @@ Varieties of calls to the 'output-cb' function(s)
 #:got got
 (#:not-expected OR #:expected) expected
 
+#:tally-passed num-passes
+#:tally-failed num-fails
+#:tally-skipped num-skips
+
 #:suite-status 'complete
 !#
 (define (output-normal . kwargs)
@@ -492,12 +502,12 @@ Varieties of calls to the 'output-cb' function(s)
               (println "    " colour-red "[FAIL] " colour-normal test-desc)
               (if-let expected (kw 'expected)
                 (begin
-                  (println "      Expected: " expected)
-                  (println "           Got: " got))
+                  (println "      Expected: '" expected "'")
+                  (println "           Got: '" got "'"))
                 (if-let not-expected (kw 'not-expected)
                   (begin
-                    (println "      Expected: not " not-expected)
-                    (println "           Got: " got)))))
+                    (println "      Expected: not '" not-expected "'")
+                    (println "           Got: '" got "'")))))
             (println "      Test failed: details unavailable")))))))
 
 (define (output-tap . kwargs)
@@ -521,7 +531,12 @@ Varieties of calls to the 'output-cb' function(s)
   (define colour-normal
     (if (equal? colour-red "") "" kolour-normal))
 
-  (if-let suite-desc (kw 'suite-desc) (println "# Suite: " suite-desc))
+  (if-let suite-desc (kw 'suite-desc)
+    (println "# Suite: " suite-desc))
+  (if-let passed (kw 'tally-passed)
+    (if-let failed (kw 'tally-failed)
+      (if-let skipped (kw 'tally-skipped)
+        (println "1.." (+ passed failed skipped)))))
 
   (if-let test-status (kw 'test-status)
     (if-let test-desc (kw 'test-desc)
@@ -547,12 +562,12 @@ Varieties of calls to the 'output-cb' function(s)
                 test-desc)
               (if-let expected (kw 'expected)
                 (begin
-                  (println "# Expected: " expected)
-                  (println "#      Got: " got))
+                  (println "# Expected: '" expected "'")
+                  (println "#      Got: '" got "'"))
                 (if-let not-expected (kw 'not-expected)
                   (begin
-                    (println "# Expected: not " not-expected)
-                    (println "#      Got: " got)))))
+                    (println "# Expected: not '" not-expected "'")
+                    (println "#      Got: '" got "'")))))
             (println "# Test failed: details unavailable")))))))
 
 (define output-none stubf)
