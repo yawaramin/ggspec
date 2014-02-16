@@ -307,7 +307,7 @@ Returns
                     (got (cadddr result)))
 
                     ;; Run all the teardowns thunks:
-                    (for-each (lambda (td) (td)) tdowns)
+                    (for-each (lambda (td) (td env)) tdowns)
                     ;; Output diagnostics:
                     (output-cb
                       #:colour colour?
@@ -372,16 +372,17 @@ Returns
 Declares a setup symbol-binding.
 
 Arguments
-  sym: symbol: a symbol by which to refer to the bound value.
+  'sym: symbol: a symbol by which to refer to the bound value.
 
-  expr: any: a value to bind to the symbol above. This value may later
-  be accessed from any test in the same suite by calling the test's
-  'environment' (usually e) with the symbol. E.g., (e 'sym).
+  expr ...: any: a variable number of expressions, the last of which will be
+  bound to the symbol above. This value may later be accessed from any test in
+  the same suite by calling the test's 'environment' (usually e) with the
+  symbol. E.g., (e 'sym).
 !#
 (define-syntax setup
   (syntax-rules ()
-    ((_ sym expr)
-      (cons sym (lambda () expr)))))
+    ((_ sym expr ...)
+      (cons sym (lambda () expr ...)))))
 
 (define tests list)
 
@@ -427,17 +428,22 @@ Returns
 (define teardowns list)
 
 #!
-Declares a teardown.
+Declares a teardown. Every teardown will be run after each test, and
+each teardown will be passed the 'environment' that was defined for that
+test.
 
 Arguments
+  env: same as in 'test', above.
+
   expr ...: any number of expressions.
 
 Returns
-  A thunk containing all the expressions above, ready to be evaluated.
+  A function which takes an 'environment' and carries out any number of
+  actions.
 !#
 (define-syntax teardown
   (syntax-rules ()
-    ((_ expr ...) (lambda () expr ...))))
+    ((_ env expr ...) (lambda (env) expr ...))))
 
 (define (kwalist arglist)
   "Turn a list of keyword arguments into an alist of symbols and
