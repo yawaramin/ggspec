@@ -41,7 +41,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
     suites."
   (define (up-down-skip path stat result) result)
   (file-system-fold
-    (stub #t)
+    (lambda _ #t)
     (lambda (path stat result)
       (define path-length (string-length path))
 
