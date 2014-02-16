@@ -132,7 +132,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
       #:tally-passed (suite-passed result)
       #:tally-failed (suite-failed result)
       #:tally-skipped (suite-skipped result))
-    (exit (suite-skipped result))))
+    (exit (suite-failed result))))
 
 ;; vim:set ft=scheme:
 
