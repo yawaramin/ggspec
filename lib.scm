@@ -43,6 +43,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
     option
     println
     range
+    run-file
     setups
     setup
     tests
@@ -70,19 +71,43 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
     ((_ name val then-exp)
       (if-let name val then-exp #f))))
 
-(define (stub retval)
-  "Stubs a function to return a canned value.
+#!
+Stub out any variable in any module (including the current module) with
+a new value (which could be a function), evaluate some expressions,
+restore the old variable value, and return the result value from the
+last of the evaluated expressions.
 
-  Arguments:
-    retval: any: the canned value to return.
+Arguments
+  mod-name: '(name-component ...): the module name. Optional. If
+  omitted, assumed to be the current module. E.g. '(ggspec lib).
 
-  Returns:
-    A function that takes any combination of arguments and returns the
-    canned value."
-  (lambda _ retval))
+    name-component: one of the components of the module name.
 
-;; A frequently-used stub.
-(define stubf (stub #f))
+  var-name: symbol: the name of the variable to stub out. E.g. 'map.
+
+  val: any (including function): the new value to give to the
+  stubbed-out variable.
+
+  expr ...: any number of expressions to evaluate in the context of the
+  new value.
+
+Returns
+  The return value from the last of the evaluated 'expr's.
+!#
+(define-syntax stub
+  (syntax-rules ()
+    ((_ mod-name var-name val expr ...)
+      (let*
+        ((mod (resolve-module mod-name #:ensure #f))
+        (val-old (module-ref mod var-name)))
+
+        (dynamic-wind
+          (lambda () (module-set! mod var-name val))
+          (lambda () expr ...)
+          (lambda () (module-set! mod var-name val-old)))))
+    ((_ var-name val thunk)
+      (stub (current-module) var-name val thunk))))
+
 (define end '())
 
 #!
@@ -620,7 +645,7 @@ Varieties of calls to the 'output-cb' function(s)
                     (println "#      Got: '" got "'")))))
             (println "# Test failed: details unavailable")))))))
 
-(define output-none stubf)
+(define (output-none . _) #f)
 
 (define (suite-add-option opt s)
   "Add an option to the read, unevaluated form of a suite.
@@ -662,4 +687,55 @@ Varieties of calls to the 'output-cb' function(s)
     (('suite d ts os ss) (list 'suite d ts (opts-add-opt os opt) ss))
     (('suite d ts os ss tds)
       (list 'suite d ts (opts-add-opt os opt) ss tds))))
+
+(define (run-file fname opts)
+  "Run all test suites found in the given file, passing in all given
+  options, and aggregate and return the number of passed and failed
+  tests.
+
+  Arguments
+    fname: string: the name of the file to look in for test suites.
+
+    opts: (list opt ...)
+
+      opt: '(option 'k v)
+
+        'k: symbol: the name of the option to pass to all suites in the
+        file.
+
+        v: any: the value of the option.
+
+  Returns
+    (list num-passes num-fails): same as in the suite function."
+  (call-with-input-file
+    fname
+    (lambda (f)
+      (let loop
+        ((form (read f))
+        (num-passes 0)
+        (num-fails 0)
+        (num-skips 0))
+
+        (cond
+          ((eof-object? form)
+            (list num-passes num-fails num-skips))
+          ((equal? (car form) 'suite)
+            ;; Add options to the current suite and run it.
+            (let
+              ((results
+                (eval
+                  (fold suite-add-option form opts)
+                  (current-module))))
+
+              (loop
+                (read f)
+                (+ num-passes (suite-passed results))
+                (+ num-fails (suite-failed results))
+                (+ num-skips (suite-skipped results)))))
+          (#t
+            ;; This is some form other than a suite definition.
+            (begin
+              (eval form (current-module))
+              ;; Go on to the next form, with results unchanged.
+              (loop (read f) num-passes num-fails num-skips))))))))
 
