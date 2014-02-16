@@ -42,7 +42,6 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
     options
     option
     println
-    range
     run-file
     setups
     setup
@@ -109,39 +108,6 @@ Returns
       (stub (current-module) var-name val thunk))))
 
 (define end '())
-
-#!
-Creates a list of numbers in the range specified.
-
-Arguments
-  start: number: optional (default 0). The number to start at.
-
-  stop: number: the number to stop at.
-
-  step: number: optional (default 1). The difference between each number
-  in the list.
-
-Returns
-  A list of numbers starting at 'start', incrementing by 'step', and
-  stopping at exactly or at less than 'stop'. The list will stop at
-  exactly 'stop' if all three arguments are integers. Otherwise it will
-  stop when the last number in the list is smaller than 'stop'.
-!#
-(define range
-  (case-lambda
-    ((start stop step)
-      (reverse
-        (let loop
-          ((stop stop)
-          (start start)
-          (step step)
-          (result end))
-
-          (if (>= start stop)
-            result
-            (loop stop (+ start step) step (cons start result))))))
-    ((start stop) (range start stop 1))
-    ((stop) (range 0 stop 1))))
 
 (define (println . args) (for-each display args) (newline))
 
