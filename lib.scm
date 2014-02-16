@@ -71,19 +71,43 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
     ((_ name val then-exp)
       (if-let name val then-exp #f))))
 
-(define (stub retval)
-  "Stubs a function to return a canned value.
+#!
+Stub out any variable in any module (including the current module) with
+a new value (which could be a function), evaluate some expressions,
+restore the old variable value, and return the result value from the
+last of the evaluated expressions.
 
-  Arguments:
-    retval: any: the canned value to return.
+Arguments
+  mod-name: '(name-component ...): the module name. Optional. If
+  omitted, assumed to be the current module. E.g. '(ggspec lib).
 
-  Returns:
-    A function that takes any combination of arguments and returns the
-    canned value."
-  (lambda _ retval))
+    name-component: one of the components of the module name.
 
-;; A frequently-used stub.
-(define stubf (stub #f))
+  var-name: symbol: the name of the variable to stub out. E.g. 'map.
+
+  val: any (including function): the new value to give to the
+  stubbed-out variable.
+
+  expr ...: any number of expressions to evaluate in the context of the
+  new value.
+
+Returns
+  The return value from the last of the evaluated 'expr's.
+!#
+(define-syntax stub
+  (syntax-rules ()
+    ((_ mod-name var-name val expr ...)
+      (let*
+        ((mod (resolve-module mod-name #:ensure #f))
+        (val-old (module-ref mod var-name)))
+
+        (dynamic-wind
+          (lambda () (module-set! mod var-name val))
+          (lambda () expr ...)
+          (lambda () (module-set! mod var-name val-old)))))
+    ((_ var-name val thunk)
+      (stub (current-module) var-name val thunk))))
+
 (define end '())
 
 #!
@@ -621,7 +645,7 @@ Varieties of calls to the 'output-cb' function(s)
                     (println "#      Got: '" got "'")))))
             (println "# Test failed: details unavailable")))))))
 
-(define output-none stubf)
+(define (output-none . _) #f)
 
 (define (suite-add-option opt s)
   "Add an option to the read, unevaluated form of a suite.
