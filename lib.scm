@@ -43,6 +43,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
     option
     println
     range
+    run-file
     setups
     setup
     tests
@@ -662,4 +663,55 @@ Varieties of calls to the 'output-cb' function(s)
     (('suite d ts os ss) (list 'suite d ts (opts-add-opt os opt) ss))
     (('suite d ts os ss tds)
       (list 'suite d ts (opts-add-opt os opt) ss tds))))
+
+(define (run-file fname opts)
+  "Run all test suites found in the given file, passing in all given
+  options, and aggregate and return the number of passed and failed
+  tests.
+
+  Arguments
+    fname: string: the name of the file to look in for test suites.
+
+    opts: (list opt ...)
+
+      opt: '(option 'k v)
+
+        'k: symbol: the name of the option to pass to all suites in the
+        file.
+
+        v: any: the value of the option.
+
+  Returns
+    (list num-passes num-fails): same as in the suite function."
+  (call-with-input-file
+    fname
+    (lambda (f)
+      (let loop
+        ((form (read f))
+        (num-passes 0)
+        (num-fails 0)
+        (num-skips 0))
+
+        (cond
+          ((eof-object? form)
+            (list num-passes num-fails num-skips))
+          ((equal? (car form) 'suite)
+            ;; Add options to the current suite and run it.
+            (let
+              ((results
+                (eval
+                  (fold suite-add-option form opts)
+                  (current-module))))
+
+              (loop
+                (read f)
+                (+ num-passes (suite-passed results))
+                (+ num-fails (suite-failed results))
+                (+ num-skips (suite-skipped results)))))
+          (#t
+            ;; This is some form other than a suite definition.
+            (begin
+              (eval form (current-module))
+              ;; Go on to the next form, with results unchanged.
+              (loop (read f) num-passes num-fails num-skips))))))))
 
