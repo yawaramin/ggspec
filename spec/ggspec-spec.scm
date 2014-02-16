@@ -118,25 +118,36 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
     (test "Should have one each of passes, fails, and skips"
       e
       (begin
-        (define results (e 's))
+        (define results ((e 's)))
         (assert-all
           (assert-equal 1 (suite-passed results))
           (assert-equal 1 (suite-failed results))
-          (assert-equal 1 (suite-skipped results))))))
+          (assert-equal 1 (suite-skipped results)))))
+    (test "The setup and teardown functions should be run before and after every test"
+      e
+      (assert-equal
+        (string-append
+          "Setup\n"
+          "Teardown\n"
+          "Setup\n"
+          "Teardown\n")
+        (with-output-to-string (e 's)))))
   (options)
   (setups
     (setup 's
-      (suite "A test-internal suite"
-        (tests
-          (test "A passing test" e (assert-equal 1 1))
-          (test "A failing test" e (assert-equal 0 1))
-          (test "A skipped test"
-            e
-            (assert-equal 0 1)
-            (options
-              (option 'skip #t))))
-        (options
-          (option 'output-cb output-none))))))
+      (lambda ()
+        (suite "A test-internal suite"
+          (tests
+            (test "A passing test" e (assert-equal 1 1))
+            (test "A failing test" e (assert-equal 0 1))
+            (test "A skipped test"
+              e
+              (assert-equal 0 1)
+              (options
+                (option 'skip #t))))
+          (options (option 'output-cb output-none))
+          (setups (setup 's (println "Setup")))
+          (teardowns (teardown e (println "Teardown"))))))))
 
 (suite "The suite-add-option function"
   (tests

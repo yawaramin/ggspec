@@ -32,11 +32,21 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 (define release-name "Gemini")
 
 (define (run-file fname opts)
-  "Run all test suites found in the given file, and aggregate and return
-  the number of passed and failed tests.
+  "Run all test suites found in the given file, passing in all given
+  options, and aggregate and return the number of passed and failed
+  tests.
 
   Arguments
     fname: string: the name of the file to look in for test suites.
+
+    opts: (list opt ...)
+
+      opt: '(option 'k v)
+
+        'k: symbol: the name of the option to pass to all suites in the
+        file.
+
+        v: any: the value of the option.
 
   Returns
     (list num-passes num-fails): same as in the suite function."
@@ -79,6 +89,8 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
   Arguments
     dname: string: the name of the directory to look in for test suites.
+
+    opts: same as for 'run-file', above.
 
   Returns
     (list num-passes num-fails): same as in the suite function."
