@@ -42,7 +42,6 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
     options
     option
     println
-    range
     run-file
     setups
     setup
@@ -107,39 +106,6 @@ Returns
       (stub (current-module) var-name val thunk))))
 
 (define end '())
-
-#!
-Creates a list of numbers in the range specified.
-
-Arguments
-  start: number: optional (default 0). The number to start at.
-
-  stop: number: the number to stop at.
-
-  step: number: optional (default 1). The difference between each number
-  in the list.
-
-Returns
-  A list of numbers starting at 'start', incrementing by 'step', and
-  stopping at exactly or at less than 'stop'. The list will stop at
-  exactly 'stop' if all three arguments are integers. Otherwise it will
-  stop when the last number in the list is smaller than 'stop'.
-!#
-(define range
-  (case-lambda
-    ((start stop step)
-      (reverse
-        (let loop
-          ((stop stop)
-          (start start)
-          (step step)
-          (result end))
-
-          (if (>= start stop)
-            result
-            (loop stop (+ start step) step (cons start result))))))
-    ((start stop) (range start stop 1))
-    ((stop) (range 0 stop 1))))
 
 (define (println . args) (for-each display args) (newline))
 
@@ -221,48 +187,49 @@ Declares a test suite.
 Arguments
   desc: string: description of the suite.
 
-  tsts: (list tst ...): a collection of tests to run in this suite.
+  tsts: (tests tst ...): a collection of tests to run in this suite.
 
-    tst: (list desc opts (lambda (e) expr))
+    tst: (test desc expr opts)
 
       desc: string: description of the test.
-      opts: same as above.
       expr: the body of the test.
+      opts: same as suite options, see immediately below.
 
-  opts: (list opt ...): a collection of options to pass in to the suite.
-  Optional. Default is no options to pass in to the suite.
+  opts: (options opt ...): a collection of options to pass in to the
+  suite. Optional. Default is no options to pass in to the suite.
 
-    opt:
-      (list
-        (cons opt-name opt-val) ...)
+    opt: (option opt-name opt-val)
 
       opt-name: symbol: the name of the option.
       opt-val: any: the value being given to the option.
 
-  sups: (list sup ...): a collection of setup names and values to pass
+  sups: (setups sup ...): a collection of setup names and values to pass
   into each test. Optional. Default is no setups.
 
-    sup: (cons sup-name sup-val)
+    sup: (setup sup-name expr ...)
 
       sup-name: symbol
-      sup-val: (lambda () expr)
 
-        expr: any: the value to be given to the setup variable during
-        each test run. Will be re-evaluated each time a test is run.
+      expr ...: the expressions to evaluate. The last of these will be
+      the value assigned to the setup name. Will be re-evaluated each
+      time a test is run.
 
-  tdowns: (list tdown ...): a collection of teardowns to run after
+  tdowns: (teardowns tdown ...): a collection of teardowns to run after
   running each test. Optional. Default is no teardowns.
 
-    tdown: (teardown (lambda () body ...))
+    tdown: (teardown e body ...)
 
-      body: the body expressions of the teardown.
+      e: the 'environment' that was set up by the setup functions.
+      Required even if no setups were done.
+
+      body: ... the body expressions of the teardown.
 
 Side Effects
   Outputs descriptive and diagnostic messages using the given runtime
   message ('output-cb') function.
 
 Returns
-  (list num-passes num-fails)
+  (list num-passes num-fails num-skips)
 
     num-passes: number: the number of passed tests.
     num-fails: number: the number of failed tests.
