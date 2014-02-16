@@ -284,3 +284,31 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
             (assert-false (error? (/ 1 0)))))
         (options (option 'tally #t))))))
 
+(suite "The run-file function"
+  (tests
+    (test "Should report results for a file with test suites"
+      e
+      (assert-equal
+        (list 1 1 1)
+        (stub
+          '(ggspec lib)
+          'call-with-input-file
+          (lambda (fname proc)
+            (call-with-input-string
+              (string-append
+                "(suite \"1\"\n"
+                "  (tests\n"
+                "    (test \"A\" e (assert-true #t))\n"
+                "    (test \"B\" e (assert-true #f))\n"
+                "    (test \"A\"\n"
+                "      e\n"
+                "      (assert-true #t)\n"
+                "      (options (option 'skip #t))))\n"
+                "  (options (option 'output-cb output-none)))\n"
+                "\n"
+                "(suite \"2\"\n"
+                "  end\n"
+                "  (options (option 'output-cb output-none)))\n")
+              proc))
+          (run-file "test-file" end))))))
+

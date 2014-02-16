@@ -31,57 +31,6 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 (define version-num "1.2")
 (define release-name "Gemini")
 
-(define (run-file fname opts)
-  "Run all test suites found in the given file, passing in all given
-  options, and aggregate and return the number of passed and failed
-  tests.
-
-  Arguments
-    fname: string: the name of the file to look in for test suites.
-
-    opts: (list opt ...)
-
-      opt: '(option 'k v)
-
-        'k: symbol: the name of the option to pass to all suites in the
-        file.
-
-        v: any: the value of the option.
-
-  Returns
-    (list num-passes num-fails): same as in the suite function."
-  (call-with-input-file
-    fname
-    (lambda (f)
-      (let loop
-        ((form (read f))
-        (num-passes 0)
-        (num-fails 0)
-        (num-skips 0))
-
-        (cond
-          ((eof-object? form)
-            (list num-passes num-fails num-skips))
-          ((equal? (car form) 'suite)
-            ;; Add options to the current suite and run it.
-            (let
-              ((results
-                (eval
-                  (fold suite-add-option form opts)
-                  (current-module))))
-
-              (loop
-                (read f)
-                (+ num-passes (suite-passed results))
-                (+ num-fails (suite-failed results))
-                (+ num-skips (suite-skipped results)))))
-          (#t
-            ;; This is some form other than a suite definition.
-            (begin
-              (eval form (current-module))
-              ;; Go on to the next form, with results unchanged.
-              (loop (read f) num-passes num-fails num-skips))))))))
-
 (define (run-tree dname opts)
   "Run all test suites found in files in the given directory and all its
   subdirectories, and aggregate and return the number of passed and
@@ -177,7 +126,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
       #:tally-passed (suite-passed result)
       #:tally-failed (suite-failed result)
       #:tally-skipped (suite-skipped result))
-    (exit (suite-skipped result))))
+    (exit (suite-failed result))))
 
 ;; vim:set ft=scheme:
 
