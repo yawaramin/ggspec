@@ -248,10 +248,12 @@ Returns
 (define suite
   (case-lambda
     ((desc tsts opts sups tdowns)
+      (define num-tests (length tsts))
       (define output-cb
         (if-let v (assoc-ref opts 'output-cb) v output-normal))
       (define colour? (if-let v (assoc-ref opts 'colour) v))
       (define skip? (if-let v (assoc-ref opts 'skip) v))
+      (define tally? (if-let v (assoc-ref opts 'tally) v))
 
       (output-cb #:suite-desc desc)
       (if skip?
@@ -261,8 +263,13 @@ Returns
             (lambda (tst)
               (output-cb #:test-desc (car tst) #:test-status 'skip))
             tsts)
+          (if tally?
+            (output-cb
+              #:tally-passed 0
+              #:tally-failed 0
+              #:tally-skipped num-tests))
           (output-cb #:suite-status 'complete)
-          (list 0 0 (length tsts)))
+          (list 0 0 num-tests))
         (begin
           (let*
             ((suite-bindings
@@ -344,9 +351,9 @@ Returns
                 (filter
                   (lambda (result) (not result))
                   intermediate-results)))
-            (num-skips (- (length tsts) num-passes num-fails)))
+            (num-skips (- num-tests num-passes num-fails)))
 
-            (if-let tally? (assoc-ref opts 'tally)
+            (if tally?
               (output-cb
                 #:tally-passed num-passes
                 #:tally-failed num-fails
