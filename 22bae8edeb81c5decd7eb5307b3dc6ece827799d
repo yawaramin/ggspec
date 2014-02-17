@@ -1,0 +1,5 @@
+I'm noticing that as I start to test higher-level code, it gets more and
+more difficult--and I have to resort to using more and more esoteric
+tricks (i.e. stubbing out a core Guile function with my dummy
+replacement). This really speaks to the need for integration and
+acceptance test tooling.
