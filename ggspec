@@ -46,11 +46,8 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
       (define path-length (string-length path))
 
       (if (equal? (substring path (- path-length 4)) ".scm")
-        (let ((file-result (run-file path opts)))
-          (list
-            (+ (suite-passed result) (suite-passed file-result))
-            (+ (suite-failed result) (suite-failed file-result))
-            (+ (suite-skipped result) (suite-skipped file-result))))))
+        (results-add result (run-file path opts))
+        result))
     up-down-skip
     up-down-skip
     up-down-skip
