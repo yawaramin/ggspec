@@ -27,7 +27,13 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
   #:use-module (ice-9 match)
   #:export
     (
+    assert-between
     assert-equal
+    assert-gt
+    assert-gte
+    assert-lt
+    assert-lte
+    assert-near
     assert-not-equal
     assert-true
     assert-false
@@ -149,6 +155,80 @@ Returns
     set to #t to indicate that the 'expected' value being passed back
     was actually _not_ expected."
   (list (not (equal? not-expected got)) not-expected #t got))
+
+(define (assert-lt got expected)
+  "Checks that the first argument is less than the second."
+  (list (< got expected) (list "less than " expected) #f got))
+
+(define (assert-gt got expected)
+  "Checks that the first argument is greater than the second."
+  (list (> got expected) (list "greater than " expected) #f got))
+
+(define (assert-lte got expected)
+  "Checks that the first argument is less than or equal to the second."
+  (list
+    (<= got expected)
+    (list "less than or equal to " expected)
+    #f
+    got))
+
+(define (assert-gte got expected)
+  "Checks that the first argument is greater than or equal to the
+  second."
+  (list
+    (>= got expected)
+    (list "greater than or equal to " expected)
+    #f
+    got))
+
+(define (assert-between got lower upper)
+  "Checks that the first argument is between the second and third.
+
+  Arguments
+    got: number: what we want to check.
+
+    lower: number: the lower bound (inclusive).
+
+    upper: number: the upper bound (inclusive).
+
+  Returns
+    Like 'assert-equal', but the first element of the result list is #t
+    if got is between lower and upper inclusive, and #f otherwise."
+  (assert-all (assert-gte got lower) (assert-lte got upper)))
+
+#!
+Checks that the first argument is near the second, optionally specifying
+how near with the third argument. This is useful for comparing
+floating-point numbers. E.g., if you do:
+
+  (assert-equal 3.3 (* 3 1.1))
+
+... the assertion will fail because of floating-point arithmetic. But if
+you do:
+
+  (assert-near 3.3 (* 3 1.1))
+
+... it will succeed.
+
+Arguments
+  got: number: what we want to check.
+
+  expected: number: the number that 'got' should be close to in value.
+
+  within: number: the maximum distance we want to tolerate between 'got'
+  and 'expected'. Optional. If omitted, assumed to be 0.01.
+
+Returns
+  Like 'assert-equal', but the first element of the result list is #t if
+  'got' is near 'expected', with the default or custom-set tolerance, or
+  #f otherwise.
+!#
+(define assert-near
+  (case-lambda
+    ((got expected within)
+      (assert-between got (- expected within) (+ expected within)))
+    ((got expected)
+      (assert-near got expected 0.01))))
 
 (define (assert-true x) (assert-equal 'true (if x 'true 'false)))
 (define (assert-false x) (assert-equal 'false (if x 'true 'false)))

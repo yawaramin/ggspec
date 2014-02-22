@@ -80,6 +80,21 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
         (assert-equal 1 1)
         (assert-equal #\a #\a)
         (assert-equal "a" "a")))
+    (test "Should assert inequality" e (assert-not-equal 1 2))
+    (test "Should assert less than" e (assert-lt 1 2))
+    (test "Should assert less than or equal to"
+      e
+      (assert-all (assert-lte 1 1) (assert-lte 1 2)))
+    (test "Should assert greater than" e (assert-gt 2 1))
+    (test "Should assert greater than or equal to"
+      e
+      (assert-all (assert-gte 1 1) (assert-gte 2 1)))
+    (test "Should assert between" e (assert-between 1 0 2))
+    (test "Should assert near"
+      e
+      (assert-all
+        (assert-near (* 3 1.1) 3.3 0.1)
+        (assert-near (* 3 1.11) 3.33)))
     (test "Should assert an error if an error occurred"
       e
       (assert-true (error? (/ 1 0))))
