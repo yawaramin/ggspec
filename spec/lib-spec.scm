@@ -99,12 +99,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
   (tests
     (test "Should have one each of passes, fails, and skips"
       e
-      (begin
-        (define results ((e 's)))
-        (assert-all
-          (assert-equal 1 (suite-passed results))
-          (assert-equal 1 (suite-failed results))
-          (assert-equal 1 (suite-skipped results)))))
+      (assert-equal (list 1 1 1) ((e 's))))
     (test "The setup and teardown functions should be run before and after every test"
       e
       (assert-equal

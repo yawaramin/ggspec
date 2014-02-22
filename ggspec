@@ -126,7 +126,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
   (if (option-ref cmd-line-opts 'version #f)
     (show-version))
 
-  (let* ((result (run-tree "spec" opts)))
+  (let ((result (run-tree "spec" opts)))
     (output-cb
       #:final-tally #t
       #:tally-passed (suite-passed result)
