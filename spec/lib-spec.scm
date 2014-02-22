@@ -80,6 +80,21 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
         (assert-equal 1 1)
         (assert-equal #\a #\a)
         (assert-equal "a" "a")))
+    (test "Should assert inequality" e (assert-not-equal 1 2))
+    (test "Should assert less than" e (assert-lt 1 2))
+    (test "Should assert less than or equal to"
+      e
+      (assert-all (assert-lte 1 1) (assert-lte 1 2)))
+    (test "Should assert greater than" e (assert-gt 2 1))
+    (test "Should assert greater than or equal to"
+      e
+      (assert-all (assert-gte 1 1) (assert-gte 2 1)))
+    (test "Should assert between" e (assert-between 1 0 2))
+    (test "Should assert near"
+      e
+      (assert-all
+        (assert-near (* 3 1.1) 3.3 0.1)
+        (assert-near (* 3 1.11) 3.33)))
     (test "Should assert an error if an error occurred"
       e
       (assert-true (error? (/ 1 0))))
@@ -87,16 +102,19 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
       e
       (assert-false (error? (/ 1 1))))))
 
+(suite "The results-add function"
+  (tests
+    (test "Should sum up passed, failed, and skipped results"
+      e
+      (assert-equal
+        (list 2 2 2)
+        (results-add (list 1 1 0) (list 1 1 2))))))
+
 (suite "A ggspec example suite"
   (tests
     (test "Should have one each of passes, fails, and skips"
       e
-      (begin
-        (define results ((e 's)))
-        (assert-all
-          (assert-equal 1 (suite-passed results))
-          (assert-equal 1 (suite-failed results))
-          (assert-equal 1 (suite-skipped results)))))
+      (assert-equal (list 1 1 1) ((e 's))))
     (test "The setup and teardown functions should be run before and after every test"
       e
       (assert-equal
@@ -105,7 +123,17 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
           "Teardown\n"
           "Setup\n"
           "Teardown\n")
-        (with-output-to-string (e 's)))))
+        (with-output-to-string (e 's))))
+    (test "Should treat an exception in a test as a failure"
+      e
+      (assert-equal
+        (list 0 1 0)
+        (suite "A suite with an error in a test"
+          (tests
+            (test "A test with an error"
+              e
+              (assert-equal 0 (/ 1 0))))
+          (options (option 'output-cb output-none))))))
   (options)
   (setups
     (setup 's

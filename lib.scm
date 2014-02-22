@@ -27,7 +27,13 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
   #:use-module (ice-9 match)
   #:export
     (
+    assert-between
     assert-equal
+    assert-gt
+    assert-gte
+    assert-lt
+    assert-lte
+    assert-near
     assert-not-equal
     assert-true
     assert-false
@@ -42,6 +48,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
     options
     option
     println
+    results-add
     run-file
     setups
     setup
@@ -147,6 +154,80 @@ Returns
     was actually _not_ expected."
   (list (not (equal? not-expected got)) not-expected #t got))
 
+(define (assert-lt got expected)
+  "Checks that the first argument is less than the second."
+  (list (< got expected) (list "less than " expected) #f got))
+
+(define (assert-gt got expected)
+  "Checks that the first argument is greater than the second."
+  (list (> got expected) (list "greater than " expected) #f got))
+
+(define (assert-lte got expected)
+  "Checks that the first argument is less than or equal to the second."
+  (list
+    (<= got expected)
+    (list "less than or equal to " expected)
+    #f
+    got))
+
+(define (assert-gte got expected)
+  "Checks that the first argument is greater than or equal to the
+  second."
+  (list
+    (>= got expected)
+    (list "greater than or equal to " expected)
+    #f
+    got))
+
+(define (assert-between got lower upper)
+  "Checks that the first argument is between the second and third.
+
+  Arguments
+    got: number: what we want to check.
+
+    lower: number: the lower bound (inclusive).
+
+    upper: number: the upper bound (inclusive).
+
+  Returns
+    Like 'assert-equal', but the first element of the result list is #t
+    if got is between lower and upper inclusive, and #f otherwise."
+  (assert-all (assert-gte got lower) (assert-lte got upper)))
+
+#!
+Checks that the first argument is near the second, optionally specifying
+how near with the third argument. This is useful for comparing
+floating-point numbers. E.g., if you do:
+
+  (assert-equal 3.3 (* 3 1.1))
+
+... the assertion will fail because of floating-point arithmetic. But if
+you do:
+
+  (assert-near 3.3 (* 3 1.1))
+
+... it will succeed.
+
+Arguments
+  got: number: what we want to check.
+
+  expected: number: the number that 'got' should be close to in value.
+
+  within: number: the maximum distance we want to tolerate between 'got'
+  and 'expected'. Optional. If omitted, assumed to be 0.01.
+
+Returns
+  Like 'assert-equal', but the first element of the result list is #t if
+  'got' is near 'expected', with the default or custom-set tolerance, or
+  #f otherwise.
+!#
+(define assert-near
+  (case-lambda
+    ((got expected within)
+      (assert-between got (- expected within) (+ expected within)))
+    ((got expected)
+      (assert-near got expected 0.01))))
+
 (define (assert-true x) (assert-equal 'true (if x 'true 'false)))
 (define (assert-false x) (assert-equal 'false (if x 'true 'false)))
 
@@ -180,6 +261,21 @@ Returns
 (define-syntax error?
   (syntax-rules ()
     ((_ expr) (catch #t (lambda () expr #f) (lambda _ #t)))))
+
+(define (results-add r1 r2)
+  "Returns a new results list created by adding together the individual
+  passes, fails and skips from the two passed-in lists.
+
+  Arguments
+    r1: (list num-passes num-fails num-skips): the first results list.
+    r2: (list num-passes num-fails num-skips): the second results list.
+
+  Returns
+    (list num-passes num-fails num-skips)"
+  (list
+    (+ (suite-passed r1) (suite-passed r2))
+    (+ (suite-failed r1) (suite-failed r2))
+    (+ (suite-skipped r1) (suite-skipped r2))))
 
 #!
 Declares a test suite.
@@ -244,6 +340,16 @@ Returns
       (define colour? (if-let v (assoc-ref opts 'colour) v))
       (define skip? (if-let v (assoc-ref opts 'skip) v))
       (define tally? (if-let v (assoc-ref opts 'tally) v))
+      (define (run-test-safely tst tdowns env)
+        (define retval
+          (catch
+            #t
+            (lambda () (tst env))
+            (lambda (key . params)
+              (list #f "No error" #f (cons key (cons ": " params))))))
+
+        (for-each (lambda (td) (td env)) tdowns)
+        retval)
 
       (output-cb #:suite-desc desc)
       (if skip?
@@ -295,16 +401,14 @@ Returns
                   (define (env name) (assoc-ref test-bindings name))
 
                   (let*
-                    ;; Run the test's function:
-                    ((result ((caddr tst) env))
+                    ;; Run the test's function and all teardowns:
+                    ((result (run-test-safely (caddr tst) tdowns env))
                     ;; Extract parts of each result:
-                    (test-status (car result))
+                    (test-status (car result)) ; #t or #f
                     (expected (cadr result))
                     (flag (caddr result))
                     (got (cadddr result)))
 
-                    ;; Run all the teardowns thunks:
-                    (for-each (lambda (td) (td env)) tdowns)
                     ;; Output diagnostics:
                     (output-cb
                       #:colour colour?
@@ -677,13 +781,10 @@ Varieties of calls to the 'output-cb' function(s)
     (lambda (f)
       (let loop
         ((form (read f))
-        (num-passes 0)
-        (num-fails 0)
-        (num-skips 0))
+        (final-result (list 0 0 0)))
 
         (cond
-          ((eof-object? form)
-            (list num-passes num-fails num-skips))
+          ((eof-object? form) final-result)
           ((equal? (car form) 'suite)
             ;; Add options to the current suite and run it.
             (let
@@ -694,13 +795,11 @@ Varieties of calls to the 'output-cb' function(s)
 
               (loop
                 (read f)
-                (+ num-passes (suite-passed results))
-                (+ num-fails (suite-failed results))
-                (+ num-skips (suite-skipped results)))))
+                (results-add final-result results))))
           (#t
             ;; This is some form other than a suite definition.
             (begin
               (eval form (current-module))
               ;; Go on to the next form, with results unchanged.
-              (loop (read f) num-passes num-fails num-skips))))))))
+              (loop (read f) final-result))))))))
 
