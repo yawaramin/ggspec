@@ -262,6 +262,16 @@ Returns
       (define colour? (if-let v (assoc-ref opts 'colour) v))
       (define skip? (if-let v (assoc-ref opts 'skip) v))
       (define tally? (if-let v (assoc-ref opts 'tally) v))
+      (define (run-test-safely tst tdowns env)
+        (define retval
+          (catch
+            #t
+            (lambda () (tst env))
+            (lambda (key . params)
+              (list #f "No error" #f (cons key (cons ": " params))))))
+
+        (for-each (lambda (td) (td env)) tdowns)
+        retval)
 
       (output-cb #:suite-desc desc)
       (if skip?
@@ -313,16 +323,14 @@ Returns
                   (define (env name) (assoc-ref test-bindings name))
 
                   (let*
-                    ;; Run the test's function:
-                    ((result ((caddr tst) env))
+                    ;; Run the test's function and all teardowns:
+                    ((result (run-test-safely (caddr tst) tdowns env))
                     ;; Extract parts of each result:
-                    (test-status (car result))
+                    (test-status (car result)) ; #t or #f
                     (expected (cadr result))
                     (flag (caddr result))
                     (got (cadddr result)))
 
-                    ;; Run all the teardowns thunks:
-                    (for-each (lambda (td) (td env)) tdowns)
                     ;; Output diagnostics:
                     (output-cb
                       #:colour colour?

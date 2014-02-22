@@ -108,7 +108,17 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
           "Teardown\n"
           "Setup\n"
           "Teardown\n")
-        (with-output-to-string (e 's)))))
+        (with-output-to-string (e 's))))
+    (test "Should treat an exception in a test as a failure"
+      e
+      (assert-equal
+        (list 0 1 0)
+        (suite "A suite with an error in a test"
+          (tests
+            (test "A test with an error"
+              e
+              (assert-equal 0 (/ 1 0))))
+          (options (option 'output-cb output-none))))))
   (options)
   (setups
     (setup 's
