@@ -28,7 +28,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
   (ice-9 ftw)
   (ice-9 getopt-long))
 
-(define version-num "1.3")
+(define version-num "1.3.1")
 (define release-name "Gander")
 
 (define (run-tree dname opts)
