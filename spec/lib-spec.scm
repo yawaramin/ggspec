@@ -87,6 +87,14 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
       e
       (assert-false (error? (/ 1 1))))))
 
+(suite "The results-add function"
+  (tests
+    (test "Should sum up passed, failed, and skipped results"
+      e
+      (assert-equal
+        (list 2 2 2)
+        (results-add (list 1 1 0) (list 1 1 2))))))
+
 (suite "A ggspec example suite"
   (tests
     (test "Should have one each of passes, fails, and skips"

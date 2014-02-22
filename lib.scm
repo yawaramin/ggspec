@@ -42,6 +42,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
     options
     option
     println
+    results-add
     run-file
     setups
     setup
@@ -182,6 +183,21 @@ Returns
 (define-syntax error?
   (syntax-rules ()
     ((_ expr) (catch #t (lambda () expr #f) (lambda _ #t)))))
+
+(define (results-add r1 r2)
+  "Returns a new results list created by adding together the individual
+  passes, fails and skips from the two passed-in lists.
+
+  Arguments
+    r1: (list num-passes num-fails num-skips): the first results list.
+    r2: (list num-passes num-fails num-skips): the second results list.
+
+  Returns
+    (list num-passes num-fails num-skips)"
+  (list
+    (+ (suite-passed r1) (suite-passed r2))
+    (+ (suite-failed r1) (suite-failed r2))
+    (+ (suite-skipped r1) (suite-skipped r2))))
 
 #!
 Declares a test suite.
@@ -679,13 +695,10 @@ Varieties of calls to the 'output-cb' function(s)
     (lambda (f)
       (let loop
         ((form (read f))
-        (num-passes 0)
-        (num-fails 0)
-        (num-skips 0))
+        (final-result (list 0 0 0)))
 
         (cond
-          ((eof-object? form)
-            (list num-passes num-fails num-skips))
+          ((eof-object? form) final-result)
           ((equal? (car form) 'suite)
             ;; Add options to the current suite and run it.
             (let
@@ -696,13 +709,11 @@ Varieties of calls to the 'output-cb' function(s)
 
               (loop
                 (read f)
-                (+ num-passes (suite-passed results))
-                (+ num-fails (suite-failed results))
-                (+ num-skips (suite-skipped results)))))
+                (results-add final-result results))))
           (#t
             ;; This is some form other than a suite definition.
             (begin
               (eval form (current-module))
               ;; Go on to the next form, with results unchanged.
-              (loop (read f) num-passes num-fails num-skips))))))))
+              (loop (read f) final-result))))))))
 
