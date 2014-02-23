@@ -26,7 +26,8 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
   (srfi srfi-1)
   (ggspec lib)
   (ice-9 ftw)
-  (ice-9 getopt-long))
+  (ice-9 getopt-long)
+  (ice-9 rdelim))
 
 (define version-num "1.3.1")
 (define release-name "Gander")
@@ -100,6 +101,31 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
       "Copyright (c) 2014 Yawar Amin.\n"
       "License: MIT <http://opensource.org/licenses/MIT>\n"))
   (exit))
+
+(define (get-rc)
+  "Returns the contents of the '~/.ggspecrc' file as a list of
+  non-whitespace tokens. If the file does not exist, or is empty,
+  returns an empty list."
+  (define rc-fname
+    (string-append
+      (if-let v (getenv "HOME") v (getenv "USERPROFILE"))
+      "/.ggspecrc"))
+
+  (if (access? rc-fname R_OK)
+    (reverse
+      (call-with-input-file
+        rc-fname
+        (lambda (f)
+          (let loop
+            ((token (read-delimited " \n" f))
+            (cur-tokens end))
+
+            (if (eof-object? token)
+              cur-tokens
+              (loop
+                (read-delimited " \n" f)
+                (cons token cur-tokens)))))))
+    end))
 
 (define (main args)
   (define cmd-line-opts
