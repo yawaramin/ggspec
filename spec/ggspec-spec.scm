@@ -29,10 +29,10 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 (suite "The get-rc function"
   (tests
     (test
-      "Should return an empty list if a ~/.ggspecrc file does not exist or is empty"
+      "Should return a list with only a single element 'ggspec' if a ~/.ggspecrc file does not exist or is empty"
       e
       (assert-equal
-        end
+        (list "ggspec")
         (stub
           '(ggspec lib)
           'call-with-input-file
@@ -41,7 +41,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
     (test "Should return a non-empty list if the rc file exists and contains options"
       e
       (assert-equal
-        (list "-c" "--format" "tap")
+        (list "ggspec" "-c" "--format" "tap")
         (stub
           '(ggspec lib)
           'call-with-input-file

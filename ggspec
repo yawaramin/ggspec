@@ -111,42 +111,80 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
       (if-let v (getenv "HOME") v (getenv "USERPROFILE"))
       "/.ggspecrc"))
 
-  (if (access? rc-fname R_OK)
-    (reverse
-      (call-with-input-file
-        rc-fname
-        (lambda (f)
-          (let loop
-            ((token (read-delimited " \n" f))
-            (cur-tokens end))
+  (cons
+    "ggspec"
+    (if (access? rc-fname R_OK)
+      (reverse
+        (call-with-input-file
+          rc-fname
+          (lambda (f)
+            (let loop
+              ((token (read-delimited " \n" f))
+              (cur-tokens end))
 
-            (if (eof-object? token)
-              cur-tokens
-              (loop
-                (read-delimited " \n" f)
-                (cons token cur-tokens)))))))
-    end))
+              (if (eof-object? token)
+                cur-tokens
+                (loop
+                  (read-delimited " \n" f)
+                  (cons token cur-tokens)))))))
+      end)))
 
 (define (main args)
-  (define cmd-line-opts
-    (getopt-long
-      args
-      '((version (single-char #\v) (value #f))
-      (help (single-char #\h) (value #f))
-      (colour (single-char #\c) (value #f))
-      (format (single-char #\f) (value #t)))))
-  (define output-cb-name (option-ref cmd-line-opts 'format "normal"))
+  (define opts-spec
+    '((version (single-char #\v) (value #f))
+    (help (single-char #\h) (value #f))
+    (colour (single-char #\c) (value #f))
+    (format (single-char #\f) (value #t))))
+
+  #!
+  A two-tier option specification structure. First we get the
+  command-line options, then we get the 'rc' file options.
+  !#
+  (define cmd-line-opts (getopt-long args opts-spec))
+  (define rc-opts (getopt-long (get-rc) opts-spec))
+
+  ;; For each option that we support:
+  (define output-cb-name
+    (option-ref
+      #!
+      We look for it in the command-line options. If we don't find it
+      there....
+      !#
+      cmd-line-opts
+      'format
+      #!
+      ... we look for it in 'rc' file. If it's not there either, we fall
+      back to the default.
+      !#
+      (option-ref rc-opts 'format "normal")))
   (define output-cb
     (cond
       ((equal? output-cb-name "normal") output-normal)
       ((equal? output-cb-name "tap") output-tap)
       (#t output-none)))
-  (define colour? (option-ref cmd-line-opts 'colour #f))
+
+  #!
+  Same strategy for the 'colour' option. In fact, this is probably best
+  extracted out into a function since the behaviour is defined now.
+  Might do that later, if/when I add more options.
+  !#
+  (define colour?
+    (option-ref
+      cmd-line-opts
+      'colour
+      (option-ref rc-opts 'colour #f)))
+
   (define opts
     (list
       `(option 'output-cb ,output-cb)
       `(option 'colour ,colour?)))
 
+  #!
+  Obviously, we don't support putting the 'help' and 'version'
+  command-line options in the 'rc' file, because they would cause ggspec
+  to immediately exit before running anything, which would be very
+  annoying.
+  !#
   (if (option-ref cmd-line-opts 'help #f)
     (show-help))
   (if (option-ref cmd-line-opts 'version #f)
