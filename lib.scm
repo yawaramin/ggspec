@@ -40,6 +40,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
     assert-all
     end
     error?
+    if-let
     suite
     suite-add-option
     suite-passed
