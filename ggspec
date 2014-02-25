@@ -133,37 +133,18 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
   !#
   (define cmd-line-opts (getopt-long args opts-spec))
   (define rc-opts (getopt-long (get-rc) opts-spec))
+  (define (get-option name default)
+    "Gets an option from the command line, or the 'rc' file, or if
+    neither exists, then from the given default"
+    (option-ref cmd-line-opts name (option-ref rc-opts name default)))
 
-  ;; For each option that we support:
-  (define output-cb-name
-    (option-ref
-      #!
-      We look for it in the command-line options. If we don't find it
-      there....
-      !#
-      cmd-line-opts
-      'format
-      #!
-      ... we look for it in 'rc' file. If it's not there either, we fall
-      back to the default.
-      !#
-      (option-ref rc-opts 'format "normal")))
+  (define output-cb-name (get-option 'format "normal"))
   (define output-cb
     (cond
       ((equal? output-cb-name "normal") output-normal)
       ((equal? output-cb-name "tap") output-tap)
       (#t output-none)))
-
-  #!
-  Same strategy for the 'colour' option. In fact, this is probably best
-  extracted out into a function since the behaviour is defined now.
-  Might do that later, if/when I add more options.
-  !#
-  (define colour?
-    (option-ref
-      cmd-line-opts
-      'colour
-      (option-ref rc-opts 'colour #f)))
+  (define colour? (get-option 'colour #f))
 
   (define opts
     (list
